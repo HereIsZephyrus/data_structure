@@ -6,6 +6,7 @@
 //
 
 #include <iostream>
+#include <gtest/gtest.h>
 #include "myarray.hpp"
 
 int main(int argc, const char * argv[]) {

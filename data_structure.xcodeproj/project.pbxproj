@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3260C0F62CB783AA001F0949 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F22CB783AA001F0949 /* libgtest.a */; };
+		3260C0F72CB783AA001F0949 /* libgmock_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F32CB783AA001F0949 /* libgmock_main.a */; };
+		3260C0F82CB783AA001F0949 /* libgmock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F42CB783AA001F0949 /* libgmock.a */; };
+		3260C0F92CB783AA001F0949 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F52CB783AA001F0949 /* libgtest_main.a */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		328ADCF92CB655FB00765774 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -19,6 +26,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3260C0F22CB783AA001F0949 /* libgtest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest.a; path = ../../../../usr/local/lib/libgtest.a; sourceTree = "<group>"; };
+		3260C0F32CB783AA001F0949 /* libgmock_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock_main.a; path = ../../../../usr/local/lib/libgmock_main.a; sourceTree = "<group>"; };
+		3260C0F42CB783AA001F0949 /* libgmock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock.a; path = ../../../../usr/local/lib/libgmock.a; sourceTree = "<group>"; };
+		3260C0F52CB783AA001F0949 /* libgtest_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest_main.a; path = ../../../../usr/local/lib/libgtest_main.a; sourceTree = "<group>"; };
 		328ADCFB2CB655FB00765774 /* data_structure */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = data_structure; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -35,6 +46,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3260C0F62CB783AA001F0949 /* libgtest.a in Frameworks */,
+				3260C0F72CB783AA001F0949 /* libgmock_main.a in Frameworks */,
+				3260C0F82CB783AA001F0949 /* libgmock.a in Frameworks */,
+				3260C0F92CB783AA001F0949 /* libgtest_main.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				328ADCFD2CB655FB00765774 /* data_structure */,
+				328ADD222CB7826800765774 /* Frameworks */,
 				328ADCFC2CB655FB00765774 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -55,6 +71,17 @@
 				328ADCFB2CB655FB00765774 /* data_structure */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		328ADD222CB7826800765774 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3260C0F42CB783AA001F0949 /* libgmock.a */,
+				3260C0F32CB783AA001F0949 /* libgmock_main.a */,
+				3260C0F22CB783AA001F0949 /* libgtest.a */,
+				3260C0F52CB783AA001F0949 /* libgtest_main.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,6 +206,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib/;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -234,6 +263,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib/;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -277,7 +308,7 @@
 				328ADD012CB655FB00765774 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		328ADD022CB655FB00765774 /* Build configuration list for PBXNativeTarget "data_structure" */ = {
 			isa = XCConfigurationList;
@@ -286,7 +317,7 @@
 				328ADD042CB655FB00765774 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
