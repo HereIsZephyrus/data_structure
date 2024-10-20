@@ -23,14 +23,21 @@ protected:
         list = Array<Object>(10);
         counter = 0;
     }
-    void SetUp() override {
-        //Array<Object> list(10);
-        //counter = 0;
-    }
+    void SetUp() override {}
     void TearDown() override {}
 };
 using IntArrayTest = ArrayTest<int>;
 using DoubleArrayTest = ArrayTest<double>;
 using CharArrayTest = ArrayTest<char>;
 using StringArrayTest = ArrayTest<string>;
+
+template<class Object>
+class VectorTest : public ::testing::Test {
+protected:
+    Vector<Object> vec;
+    VectorTest(){}
+    void SetUp() override {}
+    void TearDown() override {}
+};
+using IntVectorTest = VectorTest<int>;
 #endif /* linear_test_hpp */

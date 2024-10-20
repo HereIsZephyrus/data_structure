@@ -115,7 +115,7 @@ public:
     explicit Vector(size_t initSize,Object initVal = Object()):size(initSize){
         capacity = initSize+SPARE_CAPACITY;
         data = new Object[capacity];
-        std::fill(data,data+size,Object());
+        std::fill(data,data+size,initVal);
     }
     ~Vector(){delete [] data;};
     Vector(const Vector& rhs) : size(rhs.size),capacity(rhs.capacity){
@@ -128,7 +128,7 @@ public:
         rhs.size = 0;
     }
     const Vector& operator=(const Vector& rhs){
-        if (this == rhs)
+        if (this == &rhs)
             return *this;
         delete [] data;
         size = rhs.size;
@@ -160,7 +160,7 @@ public:
             std::fill(data + size,data + newSize, Object());
         size = newSize;
     }
-    bool empty() const{return size == 0;}
+    bool isEmpty() const{return size == 0;}
     size_t getSize() const{return size;}
     size_t getCapacity() const{return capacity;}
     void push_back(const Object& x){
@@ -168,7 +168,16 @@ public:
             reserve(size * 2 + 1);
         data[size++] = x;
     }
-    void pop_back(){size --;}
+    void pop_back(){
+        if (isEmpty())
+            throw std::runtime_error("Pop an empty vector");
+        size --;
+    }
+    void clear(){
+        size = 0;
+        capacity = SPARE_CAPACITY;
+        data = new Object[capacity];
+    }
     const Object& back(){return data[size-1];}
     class element_iter{
         // element_iter traits
