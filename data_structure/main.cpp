@@ -9,8 +9,7 @@
 #include <gtest/gtest.h>
 #include "myarray.hpp"
 
-int main(int argc, const char * argv[]) {
-    
-    std::cout << "Hello, World!\n";
-    return 0;
+int main(int argc, char **argv){
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
