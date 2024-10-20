@@ -43,7 +43,6 @@ TEST_F(CharArrayTest, SetElement) {
     constexpr char defaultVal = 'a';
     constexpr char changedVal = 'B';
     list->fill(defaultVal);
-    int counter = 0;
     for (Array<char>::iterator it = list->begin(); it != list->end(); it++){
         EXPECT_EQ(*it, defaultVal);
         counter++;
@@ -56,10 +55,10 @@ TEST_F(StringArrayTest, SetElement) {
     constexpr string defaultVal = "default_value";
     constexpr string changedVal = "changed_value";
     list->fill(defaultVal);
-    EXPECT_STREQ((list->at(0)).c_str(), defaultVal.c_str());
-    EXPECT_STREQ((list->at(1)).c_str(), defaultVal.c_str());
-    EXPECT_STREQ((list->at(4)).c_str(), defaultVal.c_str());
-    EXPECT_STREQ((list->at(9)).c_str(), defaultVal.c_str());
+    for (Array<string>::iterator it = list->begin(); it != list->end(); it++){
+        EXPECT_STREQ((*it).c_str(), defaultVal.c_str());
+        counter++;
+    }
     list->set(5, changedVal);
     EXPECT_STREQ((list->at(5)).c_str(), changedVal.c_str());
 }

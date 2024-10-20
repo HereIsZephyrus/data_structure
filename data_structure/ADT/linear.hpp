@@ -17,6 +17,7 @@ class Array {
     size_t size;
     Object* data;
 public:
+    Array() = delete;
     explicit Array(size_t setSize): size(setSize){
         data = new Object[size];
     }

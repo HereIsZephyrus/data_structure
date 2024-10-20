@@ -11,7 +11,7 @@
 #include <gtest/gtest.h>
 #include <cstring>
 #include <string>
-#include "../ADT/myarray.hpp"
+#include "../ADT/linear.hpp"
 using namespace tcb;
 using std::string;
 template<class Object>
