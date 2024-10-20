@@ -14,10 +14,15 @@ TEST(ArrayTest, GetOutOfBounds) {
     EXPECT_THROW(list.set(static_cast<size_t>(-1),10), std::out_of_range);
 }
 TEST(ArrayTest, Equals) {
-    Array<int> raw(5),changable(5,3),unchangable(6);
+    Array<int> raw(5),changable(5,3),tomove(5,9),unchangable(6);
     EXPECT_EQ(raw[0], 0);
     raw = changable;
     EXPECT_EQ(raw[0], 3);
+    Array<int> tocopy(raw);
+    EXPECT_EQ(tocopy.getSize(), 5);
+    EXPECT_EQ(tocopy[0], 3);
+    raw = std::move(tomove);
+    EXPECT_EQ(raw[0], 9);
     EXPECT_THROW(raw = unchangable, std::length_error);
 }
 TEST_F(IntArrayTest, SetElement) {
