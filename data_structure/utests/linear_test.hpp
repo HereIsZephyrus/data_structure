@@ -17,15 +17,17 @@ using std::string;
 template<class Object>
 class ArrayTest : public ::testing::Test {
 protected:
-    Array<Object>* list;
     int counter;
-    void SetUp() override {
-        list = new Array<Object>(static_cast<size_t>(10));
+    Array<Object> list;
+    ArrayTest(){
+        list = Array<Object>(10);
         counter = 0;
     }
-    void TearDown() override {delete list;}
-public:
-    
+    void SetUp() override {
+        //Array<Object> list(10);
+        //counter = 0;
+    }
+    void TearDown() override {}
 };
 using IntArrayTest = ArrayTest<int>;
 using DoubleArrayTest = ArrayTest<double>;

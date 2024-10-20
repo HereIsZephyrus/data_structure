@@ -17,9 +17,11 @@ class Array {
     size_t size;
     Object* data;
 public:
-    Array() = delete;
-    explicit Array(size_t setSize): size(setSize){
+    Array():size(0),data(nullptr){};
+    explicit Array(size_t setSize,Object initVal = Object()): size(setSize){
         data = new Object[size];
+        for (size_t i = 0; i < size; i++)
+            data[i] = initVal;
     }
     ~Array(){
         delete [] data;
@@ -49,8 +51,20 @@ public:
             throw std::out_of_range("Index out of range");
         data[index] = val;
     }
+    const Array& operator= (const Array& rhs){
+        if (this == &rhs)
+            return *this;
+        if (size != rhs.size && size>0)
+            throw std::length_error("The aray size is incomparable");
+        delete [] data;
+        data = new Object[rhs.size];
+        size = rhs.size;
+        for (size_t i = 0; i< size; i++)
+            data[i] = rhs.data[i];
+        return *this;
+    }
     class element_iter {
-            // element_iter traits
+        // element_iter traits
         using iterator_category = std::forward_iterator_tag;
         using difference_type = long;
         using value_type = Object;
@@ -90,5 +104,23 @@ public:
     const_iterator begin() const{Object* head = &data[0];return const_iterator::begin(head);}
     const_iterator end() const{Object* head = &data[0];return const_iterator::end(head + size);}
 };
+
+//template <class Object>
+//class Vector {
+ //   size_t size,capacity;
+ //   Object* data;
+//public:
+ //   Vector():size(0),capacity(5){
+ //       data = new Object[capacity];
+ //   };
+ //   explicit Vector(size_t initSize):size(initSize){
+ //       capacity = initSize * 2 + 1;
+ //       data = new Object[capacity];
+ //   }
+ //   ~Vector(){delete [] data;};
+ //   Vector(const Vector& rhs){
+ //
+ //   }
+//};
 }
 #endif /* myarray_hpp */
