@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		323B68D92CC699E90041BBC3 /* libbenchmark.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68D72CC699DB0041BBC3 /* libbenchmark.a */; };
+		323B68DA2CC699F30041BBC3 /* libbenchmark.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68D72CC699DB0041BBC3 /* libbenchmark.a */; };
+		323B68DB2CC699FC0041BBC3 /* libbenchmark_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68D82CC699DB0041BBC3 /* libbenchmark_main.a */; };
+		323B68DD2CC69A4C0041BBC3 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DC2CC69A4C0041BBC3 /* OpenGL.framework */; };
+		323B68DF2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; };
+		323B68E02CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		323B68E22CC69AEC0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; };
+		323B68E32CC69B000041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; };
+		323B68E52CC69B2E0041BBC3 /* libglm.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68E42CC69B2E0041BBC3 /* libglm.dylib */; };
+		323B68E62CC69B2E0041BBC3 /* libglm.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 323B68E42CC69B2E0041BBC3 /* libglm.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		323B68E82CC69B430041BBC3 /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68E72CC69B430041BBC3 /* libglfw.3.4.dylib */; };
+		323B68E92CC69B430041BBC3 /* libglfw.3.4.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 323B68E72CC69B430041BBC3 /* libglfw.3.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3260C0F62CB783AA001F0949 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F22CB783AA001F0949 /* libgtest.a */; };
 		3260C0F72CB783AA001F0949 /* libgmock_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F32CB783AA001F0949 /* libgmock_main.a */; };
 		3260C0F82CB783AA001F0949 /* libgmock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F42CB783AA001F0949 /* libgmock.a */; };
@@ -14,6 +26,19 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		323B68E12CC69ADE0041BBC3 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				323B68E92CC69B430041BBC3 /* libglfw.3.4.dylib in Embed Libraries */,
+				323B68E02CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Embed Libraries */,
+				323B68E62CC69B2E0041BBC3 /* libglm.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		328ADCF92CB655FB00765774 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -26,6 +51,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		323B68D72CC699DB0041BBC3 /* libbenchmark.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbenchmark.a; path = ../../../../usr/local/lib/libbenchmark.a; sourceTree = "<group>"; };
+		323B68D82CC699DB0041BBC3 /* libbenchmark_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbenchmark_main.a; path = ../../../../usr/local/lib/libbenchmark_main.a; sourceTree = "<group>"; };
+		323B68DC2CC69A4C0041BBC3 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libGLEW.2.2.0.dylib; path = ../../../../opt/homebrew/Cellar/glew/2.2.0_1/lib/libGLEW.2.2.0.dylib; sourceTree = "<group>"; };
+		323B68E42CC69B2E0041BBC3 /* libglm.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglm.dylib; path = ../../../../opt/homebrew/Cellar/glm/1.0.1/lib/libglm.dylib; sourceTree = "<group>"; };
+		323B68E72CC69B430041BBC3 /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
 		3260C0F22CB783AA001F0949 /* libgtest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest.a; path = ../../../../usr/local/lib/libgtest.a; sourceTree = "<group>"; };
 		3260C0F32CB783AA001F0949 /* libgmock_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock_main.a; path = ../../../../usr/local/lib/libgmock_main.a; sourceTree = "<group>"; };
 		3260C0F42CB783AA001F0949 /* libgmock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock.a; path = ../../../../usr/local/lib/libgmock.a; sourceTree = "<group>"; };
@@ -46,8 +77,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				323B68D92CC699E90041BBC3 /* libbenchmark.a in Frameworks */,
+				323B68E82CC69B430041BBC3 /* libglfw.3.4.dylib in Frameworks */,
+				323B68E52CC69B2E0041BBC3 /* libglm.dylib in Frameworks */,
+				323B68DD2CC69A4C0041BBC3 /* OpenGL.framework in Frameworks */,
 				3260C0F62CB783AA001F0949 /* libgtest.a in Frameworks */,
+				323B68E32CC69B000041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
+				323B68DB2CC699FC0041BBC3 /* libbenchmark_main.a in Frameworks */,
+				323B68DF2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
+				323B68E22CC69AEC0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
 				3260C0F72CB783AA001F0949 /* libgmock_main.a in Frameworks */,
+				323B68DA2CC699F30041BBC3 /* libbenchmark.a in Frameworks */,
 				3260C0F82CB783AA001F0949 /* libgmock.a in Frameworks */,
 				3260C0F92CB783AA001F0949 /* libgtest_main.a in Frameworks */,
 			);
@@ -76,6 +116,12 @@
 		328ADD222CB7826800765774 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				323B68E72CC69B430041BBC3 /* libglfw.3.4.dylib */,
+				323B68E42CC69B2E0041BBC3 /* libglm.dylib */,
+				323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */,
+				323B68DC2CC69A4C0041BBC3 /* OpenGL.framework */,
+				323B68D72CC699DB0041BBC3 /* libbenchmark.a */,
+				323B68D82CC699DB0041BBC3 /* libbenchmark_main.a */,
 				3260C0F42CB783AA001F0949 /* libgmock.a */,
 				3260C0F32CB783AA001F0949 /* libgmock_main.a */,
 				3260C0F22CB783AA001F0949 /* libgtest.a */,
@@ -94,6 +140,7 @@
 				328ADCF72CB655FB00765774 /* Sources */,
 				328ADCF82CB655FB00765774 /* Frameworks */,
 				328ADCF92CB655FB00765774 /* CopyFiles */,
+				323B68E12CC69ADE0041BBC3 /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -206,8 +253,18 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /usr/local/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/lib/;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include/,
+					"${glm_header-1.0}",
+					"${glfw_header-3.4}",
+					"${glew_header-2.2}",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib/,
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+					/opt/homebrew/Cellar/glew/2.2.0_1/lib,
+					/opt/homebrew/Cellar/glm/1.0.1/lib,
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -263,8 +320,18 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /usr/local/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/lib/;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include/,
+					"${glm_header-1.0}",
+					"${glfw_header-3.4}",
+					"${glew_header-2.2}",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib/,
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+					/opt/homebrew/Cellar/glew/2.2.0_1/lib,
+					/opt/homebrew/Cellar/glm/1.0.1/lib,
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -280,6 +347,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 379P4X5DA9;
 				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/homebrew/Cellar/glew/2.2.0_1/lib,
+					/opt/homebrew/Cellar/glm/1.0.1/lib,
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
@@ -293,6 +366,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 379P4X5DA9;
 				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/homebrew/Cellar/glew/2.2.0_1/lib,
+					/opt/homebrew/Cellar/glm/1.0.1/lib,
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
 			};

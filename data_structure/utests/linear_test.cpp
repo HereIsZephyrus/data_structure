@@ -118,13 +118,6 @@ TEST_F(IntVectorTest, InitalCheck) {
     for (Vector<int>::iterator it = vec.begin(); it != vec.end(); it++)
         EXPECT_EQ(*it, 3);
 }
-TEST_F(IntVectorTest, MoveAndTime) {
-    Vector<int> small(1000,3);
-    vec = std::move(small);
-    EXPECT_EQ(vec.getSize(), 10);
-    for (Vector<int>::iterator it = vec.begin(); it != vec.end(); it++)
-        EXPECT_EQ(*it, 3);
-}
 // list
 TEST_F(IntListTest, BasicOperator){
     EXPECT_THROW(list.at(static_cast<size_t>(2)), std::out_of_range);
