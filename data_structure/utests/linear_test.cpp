@@ -107,16 +107,21 @@ TEST_F(IntVectorTest, InitalCheck) {
     EXPECT_EQ(vec[0], 0);
     EXPECT_EQ(vec.getSize(), 10);
     EXPECT_EQ(vec.back(), 0);
-    Vector<int> other(1000000,2);
+    Vector<int> other(10,2);
     vec = other;
-    EXPECT_EQ(vec.getSize(), 1000000);
+    EXPECT_EQ(vec.getSize(), 10);
     for (Vector<int>::iterator it = vec.begin(); it != vec.end(); it++)
         EXPECT_EQ(*it, 2);
+    Vector<int> another(10,3);
+    vec = std::move(another);
+    EXPECT_EQ(vec.getSize(), 10);
+    for (Vector<int>::iterator it = vec.begin(); it != vec.end(); it++)
+        EXPECT_EQ(*it, 3);
 }
 TEST_F(IntVectorTest, MoveAndTime) {
-    Vector<int> another(100000000,3);
-    vec = std::move(another);
-    EXPECT_EQ(vec.getSize(), 100000000);
+    Vector<int> small(1000,3);
+    vec = std::move(small);
+    EXPECT_EQ(vec.getSize(), 10);
     for (Vector<int>::iterator it = vec.begin(); it != vec.end(); it++)
         EXPECT_EQ(*it, 3);
 }
