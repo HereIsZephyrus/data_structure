@@ -14,6 +14,7 @@
 namespace tcb{
 template <class Object>
 class Array {
+protected:
     size_t size;
     Object* data;
 public:
@@ -54,7 +55,7 @@ public:
             throw std::out_of_range("Index out of range");
         return data[index];
     }
-    size_t getSize() const{return size;};
+    size_t getSize() const {return size;}
     void fill(const Object& val){std::fill(data,data+size, val);}
     void set(size_t index,const Object& val){
         if (index >= size || index < 0)
@@ -105,6 +106,7 @@ public:
 
 template <class Object>
 class Vector {
+protected:
     size_t size,capacity;
     Object* data;
 public:
@@ -161,7 +163,7 @@ public:
         size = newSize;
     }
     bool isEmpty() const{return size == 0;}
-    size_t getSize() const{return size;}
+    size_t getSize() const {return size;}
     size_t getCapacity() const{return capacity;}
     void push_back(const Object& x){
         if (size == capacity)
@@ -171,7 +173,8 @@ public:
     void pop_back(){
         if (isEmpty())
             throw std::runtime_error("Pop an empty vector");
-        size --;
+        size--;
+        return;
     }
     void clear(){
         size = 0;
@@ -219,5 +222,131 @@ public:
     const_iterator begin() const{Object* head = &data[0];return const_iterator::begin(head);}
     const_iterator end() const{Object* head = &data[0];return const_iterator::end(head + size);}
 };
-}
+
+template <class Object>
+class List {
+protected:
+    size_t size;
+    struct Node{
+        Object data;
+        Node* prev,next;
+        Node(const Object& d = Object(), Node* p = nullptr, Node* n = nullptr):data(d),prev(p),next(n){}
+    };
+    Node* head,tail;
+public:
+    List():size(0),head(new Node),tail(new Node){
+        head->next = tail;
+        tail->prev = head;
+    }
+    ~List(){
+        clear();
+        delete tail;
+        delete head;
+    }
+    bool isEmpty(){return size == 0;}
+    size_t getSize() const {return size;}
+    void clear(){
+        iterator it(head->next);
+        while (!isEmpty())
+            it = earse(it);
+    }
+    class node_iter{
+        // node_iter traits
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = Node;
+        using pointer = Node *;
+        using reference = const Node &;
+    private:
+        pointer ptr;
+    public:
+        node_iter(pointer p) : ptr(p){}
+        node_iter& operator=(const node_iter& it){ptr = it.ptr;}
+        bool operator == (const node_iter& it) const {return ptr == it.ptr;}
+        bool operator != (const node_iter& it) const {return ptr != it.ptr;}
+        Object& operator *() {return ptr;}// ptr is Node*
+        node_iter& operator++(){
+            ptr = ptr->next;
+            return *this;
+        }
+        node_iter operator ++(int){
+            node_iter ret_ptr = *this;
+            ++(*this);
+            return ret_ptr;
+        }
+        node_iter& operator--(){
+            ptr = ptr->prev;
+            return *this;
+        }
+        node_iter operator--(int){
+            node_iter ret_ptr = *this;
+            --(*this);
+        }
+        node_iter operator+(size_t x){
+            for (size_t i = 0; i < x; i++)
+                ptr = ptr->next;
+            return *this;
+        }
+        node_iter operator-(size_t x){
+            for (size_t i = 0; i < x; i++)
+                ptr = ptr->prev;
+            return *this;
+        }
+    };
+    using iterator = node_iter;
+    iterator begin() {return iterator(head->next);}
+    iterator end() {return iterator(tail);}
+    using const_iterator = const iterator;
+    const_iterator begin() const{return iterator(head->next);}
+    const_iterator end() const{return iterator(tail);}
+    const Object& front() const{return begin()->data;}
+    const Object& back() const{return (--end())->data;}
+    iterator insert(iterator it, const Object& x){
+        Node* p = *it;
+        size ++;
+        return iterator(p->prev = p->prev->next = new Node(x,p->prev,p));
+    }
+    void push_front(const Object& x){insert(begin(),x);}
+    void push_back(const Object& x){insert(end(),x);return;}
+    iterator erase(iterator it){
+        if (isEmpty())
+            throw std::runtime_error("List is empty");
+        Node* p = *it;
+        iterator ret_p(p->next);
+        p->prev->next = p->next;
+        p->next->prev = p->prev;
+        delete p;
+        size --;
+        return ret_p;
+    }
+    iterator earse(iterator start,iterator end){
+        for (iterator it = start; it!= end;)
+            it = earse(it);
+        return end;
+    }
+    void pop_front(){
+        if (isEmpty())
+            throw std::runtime_error("List is empty");
+        earse(begin());
+        return;
+    }
+    void pop_back(){
+        if (isEmpty())
+            throw std::runtime_error("List is empty");
+        earse(--end());
+        return;
+    }
+    Object& at(size_t index){
+        if (index >= size)
+            throw std::out_of_range("Index out of range");
+        iterator current(begin()+index);
+        return current->data;
+    }
+    iterator find(const Object& val){// the first find value's iter
+        for (iterator it = begin(); it != end(); it++)
+            if ((*it)->data == val)
+                return it;
+    }
+};
+}// namespace tcb;
 #endif /* linear_hpp */
