@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 
 inline bool HAS_INIT_OPENGL_CONTEXT = false;
-int initOpenGL(GLFWwindow *&window);
+int initOpenGL(GLFWwindow *&window,std::string windowName);
 class WindowParas{
 public:
     static WindowParas& getInstance(){

@@ -31,7 +31,7 @@ GLfloat WindowParas::normal2orthoY(GLfloat normalY){
     GLfloat top = SCREEN_HEIGHT / yScale / 2.0f;
     return  button + (top - button) * (normalY + 1) / 2;
 }
-int initOpenGL(GLFWwindow *&window) {
+int initOpenGL(GLFWwindow *&window,std::string windowName) {
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
@@ -43,15 +43,15 @@ int initOpenGL(GLFWwindow *&window) {
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     
     WindowParas& windowPara = WindowParas::getInstance();
-    window = glfwCreateWindow(windowPara.WINDOW_WIDTH, windowPara.WINDOW_HEIGHT, "2025Autumn数据结构实习第一次", nullptr, nullptr);
+    window = glfwCreateWindow(windowPara.WINDOW_WIDTH, windowPara.WINDOW_HEIGHT, windowName.c_str(), nullptr, nullptr);
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwGetWindowContentScale(window, &windowPara.xScale, &windowPara.yScale);
-    std::cout<<"This Screen xScale is "<<windowPara.xScale<<",yScale is "<<windowPara.yScale<<std::endl;
-    glfwMakeContextCurrent(window); // to draw at this window
+    //std::cout<<"This Screen xScale is "<<windowPara.xScale<<",yScale is "<<windowPara.yScale<<std::endl;
+    glfwMakeContextCurrent(window);
     glewExperimental = GL_TRUE;
     if (GLEW_OK != glewInit()){
         std::cerr << "Failed to initialize GLEW"<<std::endl;
