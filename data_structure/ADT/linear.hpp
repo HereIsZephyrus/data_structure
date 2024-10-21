@@ -367,13 +367,15 @@ public:
         if (index >= size)
             throw std::out_of_range("Index out of range");
         iterator current(begin());
-        while (index)   ++current;
+        while (index)  { ++current; --index;}
         return *current;
     }
     iterator find(const Object& val){// the first find value's iter
-        for (iterator it = begin(); it != end(); it++)
+        iterator it = begin();
+        for (; it != end(); it++)
             if (*it == val)
                 return it;
+        return it;
     }
 };
 }// namespace tcb;

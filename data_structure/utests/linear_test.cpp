@@ -130,4 +130,20 @@ TEST_F(IntListTest, BasicOperator){
     list.push_front(3);
     EXPECT_EQ(list.back(), 5);
     EXPECT_EQ(list.front(), 3);
+    EXPECT_EQ(list.getSize(), 2);
+    list.clear();
+    EXPECT_EQ(list.isEmpty(), true);
+    EXPECT_THROW(list.at(2), std::out_of_range);
+    list.insert(list.begin(), 1);
+    list.insert(list.end(), 2);
+    list.insert(list.begin(), 0);
+    for (size_t i = 0; i < list.getSize(); i++)
+        EXPECT_EQ(list.at(i), i);
+    EXPECT_EQ(*list.find(2), list.back());
+    list.clear();
+    list.push_back(2);
+    list.push_back(2);
+    list.push_back(2);
+    for (List<int>::iterator it = list.begin(); it != list.end(); it ++)
+        EXPECT_EQ(*it, 2);
 }
