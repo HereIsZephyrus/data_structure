@@ -120,3 +120,14 @@ TEST_F(IntVectorTest, MoveAndTime) {
     for (Vector<int>::iterator it = vec.begin(); it != vec.end(); it++)
         EXPECT_EQ(*it, 3);
 }
+// list
+TEST_F(IntListTest, BasicOperator){
+    EXPECT_THROW(list.at(static_cast<size_t>(2)), std::out_of_range);
+    EXPECT_EQ(list.isEmpty(), true);
+    EXPECT_THROW(list.pop_back(), std::runtime_error);
+    list.push_back(5);
+    EXPECT_EQ(list.isEmpty(), false);
+    list.push_front(3);
+    EXPECT_EQ(list.back(), 5);
+    EXPECT_EQ(list.front(), 3);
+}

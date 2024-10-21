@@ -68,7 +68,7 @@ public:
         using difference_type = std::ptrdiff_t;
         using value_type = Object;
         using pointer = Object *;
-        using reference = const Object &;
+        using reference = Object &;
     private:
         pointer ptr;
     public:
@@ -76,7 +76,7 @@ public:
         element_iter& operator=(const element_iter& it) {ptr = it.ptr;}
         bool operator==(const element_iter& it) const {return ptr == it.ptr;}
         bool operator!=(const element_iter& it) const {return ptr != it.ptr;}
-        Object& operator*() {return *ptr;}
+        reference operator*() {return *ptr;}
         element_iter& operator++() {
             ptr++;
             return *this;
@@ -188,7 +188,7 @@ public:
         using difference_type = std::ptrdiff_t;
         using value_type = Object;
         using pointer = Object *;
-        using reference = const Object &;
+        using reference = Object &;
     private:
         pointer ptr;
     public:
@@ -196,7 +196,7 @@ public:
         element_iter& operator=(const element_iter& it){ptr = it.ptr;}
         bool operator == (const element_iter& it) const {return ptr == it.ptr;}
         bool operator != (const element_iter& it) const {return ptr != it.ptr;}
-        Object& operator *() {return *ptr;}
+        reference operator *() {return *ptr;}
         element_iter& operator++(){
             ptr++;
             return *this;
@@ -229,10 +229,11 @@ protected:
     size_t size;
     struct Node{
         Object data;
-        Node* prev,next;
+        Node *prev, *next;
         Node(const Object& d = Object(), Node* p = nullptr, Node* n = nullptr):data(d),prev(p),next(n){}
+        ~Node(){prev = nullptr; next = nullptr;}
     };
-    Node* head,tail;
+    Node *head, *tail;
 public:
     List():size(0),head(new Node),tail(new Node){
         head->next = tail;
@@ -245,73 +246,94 @@ public:
     }
     bool isEmpty(){return size == 0;}
     size_t getSize() const {return size;}
-    void clear(){
-        iterator it(head->next);
-        while (!isEmpty())
-            it = earse(it);
-    }
-    class node_iter{
-        // node_iter traits
-        using iterator_category = std::forward_iterator_tag;
+    class iterator{
+        // iterator traits
+        using iterator_category = std::bidirectional_iterator_tag;
         using difference_type = std::ptrdiff_t;
-        using value_type = Node;
+        using value_type = Object;
         using pointer = Node *;
-        using reference = const Node &;
+        using reference = value_type &;
     private:
         pointer ptr;
     public:
-        node_iter(pointer p) : ptr(p){}
-        node_iter& operator=(const node_iter& it){ptr = it.ptr;}
-        bool operator == (const node_iter& it) const {return ptr == it.ptr;}
-        bool operator != (const node_iter& it) const {return ptr != it.ptr;}
-        Object& operator *() {return ptr;}// ptr is Node*
-        node_iter& operator++(){
+        iterator(pointer p){ptr = p;};
+        iterator& operator=(const iterator& it){ptr = it.ptr; return *this;}
+        bool operator == (const iterator& it) const {return ptr == it.ptr;}
+        bool operator != (const iterator& it) const {return ptr != it.ptr;}
+        reference& operator *() {return ptr->data;}
+        pointer _ptr(){return ptr;}
+        iterator& operator++(){
             ptr = ptr->next;
             return *this;
         }
-        node_iter operator ++(int){
-            node_iter ret_ptr = *this;
+        iterator operator ++(int){
+            iterator ret_ptr = *this;
             ++(*this);
             return ret_ptr;
         }
-        node_iter& operator--(){
+        iterator& operator--(){
             ptr = ptr->prev;
             return *this;
         }
-        node_iter operator--(int){
-            node_iter ret_ptr = *this;
+        iterator operator--(int){
+            iterator ret_ptr = *this;
             --(*this);
         }
-        node_iter operator+(size_t x){
-            for (size_t i = 0; i < x; i++)
-                ptr = ptr->next;
+    };
+    class const_iterator{
+        // const_iterator traits
+        using iterator_category = std::bidirectional_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = const Object;
+        using pointer = Node *;
+        using reference = value_type &;
+    private:
+        pointer ptr;
+    public:
+        const_iterator(pointer p){ptr = p;};
+        const_iterator& operator=(const const_iterator& it){ptr = it.ptr; return *this;}
+        bool operator == (const const_iterator& it) const {return ptr == it.ptr;}
+        bool operator != (const const_iterator& it) const {return ptr != it.ptr;}
+        reference& operator *() {return ptr->data;}
+        pointer _ptr() const{return ptr;}
+        iterator& operator++(){
+            ptr = ptr->next;
             return *this;
         }
-        node_iter operator-(size_t x){
-            for (size_t i = 0; i < x; i++)
-                ptr = ptr->prev;
+        const_iterator operator ++(int){
+            iterator ret_ptr = *this;
+            ++(*this);
+            return ret_ptr;
+        }
+        const_iterator& operator--(){
+            ptr = ptr->prev;
             return *this;
+        }
+        const_iterator operator--(int){
+            iterator ret_ptr = *this;
+            --(*this);
         }
     };
-    using iterator = node_iter;
     iterator begin() {return iterator(head->next);}
     iterator end() {return iterator(tail);}
-    using const_iterator = const iterator;
-    const_iterator begin() const{return iterator(head->next);}
-    const_iterator end() const{return iterator(tail);}
-    const Object& front() const{return begin()->data;}
-    const Object& back() const{return (--end())->data;}
+    /* the const_iterator has failed. fix requeired.*/
+    const_iterator begin() const{return const_iterator(head->next);}
+    const_iterator end() const{return const_iterator(tail);}
+    const Object& front() const{return *begin();}
+    const Object& back() const{return *(--end());}
+    /* const _iterator operator */
     iterator insert(iterator it, const Object& x){
-        Node* p = *it;
+        Node *p = it._ptr();
         size ++;
-        return iterator(p->prev = p->prev->next = new Node(x,p->prev,p));
+        p->prev = p->prev->next = new Node(x,p->prev,p);
+        return iterator(p->prev);
     }
     void push_front(const Object& x){insert(begin(),x);}
     void push_back(const Object& x){insert(end(),x);return;}
-    iterator erase(iterator it){
+    iterator earse(iterator it){
         if (isEmpty())
             throw std::runtime_error("List is empty");
-        Node* p = *it;
+        Node *p = it._ptr();
         iterator ret_p(p->next);
         p->prev->next = p->next;
         p->next->prev = p->prev;
@@ -336,15 +358,21 @@ public:
         earse(--end());
         return;
     }
+    void clear(){
+        iterator it(head->next);
+        while (!isEmpty())
+            it = earse(it);
+    }
     Object& at(size_t index){
         if (index >= size)
             throw std::out_of_range("Index out of range");
-        iterator current(begin()+index);
-        return current->data;
+        iterator current(begin());
+        while (index)   ++current;
+        return *current;
     }
     iterator find(const Object& val){// the first find value's iter
         for (iterator it = begin(); it != end(); it++)
-            if ((*it)->data == val)
+            if (*it == val)
                 return it;
     }
 };

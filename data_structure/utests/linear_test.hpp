@@ -40,4 +40,14 @@ protected:
     void TearDown() override {}
 };
 using IntVectorTest = VectorTest<int>;
+
+template<class Object>
+class ListTest : public ::testing::Test {
+protected:
+    List<Object> list;
+    ListTest(){}
+    void SetUp() override {}
+    void TearDown() override {}
+};
+using IntListTest = ListTest<int>;
 #endif /* linear_test_hpp */
