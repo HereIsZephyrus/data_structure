@@ -10,6 +10,7 @@
 
 #include <cstring>
 #include <string>
+#include <vector>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -40,8 +41,8 @@ private:
     WindowParas() {}
 };
 
-namespace gui {
-constexpr GLfloat detactBias = 0.48f;
-constexpr GLfloat outboundBias = 2.0f;
+namespace maze {
+using matrix = std::vector<std::vector<bool>>;
+void DrawBasicWindow(GLFWwindow *&window,const matrix& horiBoundary, const matrix& vertBoundary);
 }
 #endif /* window_hpp */

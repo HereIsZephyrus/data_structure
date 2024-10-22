@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 #include "OpenGL/environment.hpp"
 #include "OpenGL/window.hpp"
+#include "applications/component.hpp"
 
 int maze_main();
 int main(int argc, char **argv){
@@ -39,15 +40,29 @@ int main(int argc, char **argv){
 }
 
 int maze_main(){
+    using namespace maze;
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-迷宫") != 0)
         return -1;
-    
+    Map map;
+    map.generate();
+    map.solve();
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+        DrawBasicWindow(window,map.getHoriBoundary(),map.getVertBoundary());
+        if (Recorder::getRecord().autoStepping)
+            map.autostep();
+        else if (Recorder::getRecord().toStepOver){
+            if (!map.Finished())
+                map.step();
+            else{
+                map.clear();
+                map.generate();
+                map.solve();
+            }
+        }
         glfwSwapBuffers(window);
     }
     
