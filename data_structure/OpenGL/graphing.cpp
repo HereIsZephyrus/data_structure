@@ -100,7 +100,7 @@ Primitive::Primitive(const std::vector<Vertex>& inputVertex,GLenum shp,Shader* i
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-void Primitive::draw(){
+void Primitive::draw() const {
     //std::cout<<"Draw is running"<<std::endl;
     if (shader == nullptr){
         std::cerr<<"havn't bind shader"<<std::endl;

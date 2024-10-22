@@ -47,7 +47,7 @@ int maze_main(){
     InitResource();
     Map map;
     map.generate();
-    Primitive* boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
+    Primitive* boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
     Path* path = nullptr;
     if (map.solve())
         path = new Path(map.getPathVert());
@@ -70,7 +70,7 @@ int maze_main(){
                 map.solve();
                 delete boundary;
                 delete path;
-                boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
+                boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
                 path = new Path(map.getPathVert());
             }
             Recorder::getRecord().toStepOver = false;

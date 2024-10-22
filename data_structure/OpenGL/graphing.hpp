@@ -48,7 +48,7 @@ public:
         glDeleteVertexArrays(1,&VAO);
         glDeleteBuffers(1,&VBO);
     }
-    virtual void draw();
+    virtual void draw() const;
 protected:
     GLuint VAO,VBO;
     Shader* shader;

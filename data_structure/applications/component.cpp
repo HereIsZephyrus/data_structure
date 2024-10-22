@@ -161,14 +161,13 @@ bool Map::solve() {
         delete [] visited[i];
     delete [] visited;
     visited = nullptr;
-    std::cout<<canAccess<<std::endl;
     return canAccess;
 }
 void Map::GenerateSize(){
     n = rand() % 8 + 3;
     m = rand() % 8 + 3;
 }
-bool Map::DFS(unsigned int cx,unsigned int cy){
+bool Map::DFS(unsigned int cy,unsigned int cx){
     visited[cy][cx] = true;
     if (cx == m-1 && cy == n-1){
         path.push_back(Point{cx,cy});
@@ -178,13 +177,13 @@ bool Map::DFS(unsigned int cx,unsigned int cy){
         const int nx = cx + dx[dir], ny = cy + dy[dir];
         if (nx < 0 || ny < 0 || nx >= m || ny >= n || visited[ny][nx])
             continue;
-        bool goRight = ny > cy && !vertBoundary[ny][nx+1];
-        bool goLeft = ny < cy && !vertBoundary[ny][cx+1];
-        bool goBottom = nx > cx && !horiBoundary[ny+1][nx];
-        bool goTop = nx < cx && !horiBoundary[cy+1][nx];
+        bool goBottom = ny > cy && !horiBoundary[cy+1][cx];
+        bool goTop = ny < cy && !horiBoundary[cy][cx];
+        bool goRight = nx > cx && !vertBoundary[cy][cx+1];
+        bool goLeft = nx < cx && !vertBoundary[cy][cx];
         bool canTransfer = goRight || goLeft || goTop || goBottom;
         if (canTransfer && DFS(ny,nx)){
-            path.push_back(Point{cy,cx});
+            path.push_back(Point{cx,cy});
             return true;
         }
     }
@@ -192,28 +191,12 @@ bool Map::DFS(unsigned int cx,unsigned int cy){
 }
 void InitResource(){
     {
-        pShader outside (new Shader());
-        outside->attchShader(filePath("maze_vertices.vs"),GL_VERTEX_SHADER);
-        outside->attchShader(filePath("maze_outsideboundary.gs"),GL_GEOMETRY_SHADER);
-        outside->attchShader(filePath("maze_line.frag"),GL_FRAGMENT_SHADER);
-        outside->linkProgram();
-        ShaderBucket["outside"] = std::move(outside);
-    }
-    {
         pShader inside (new Shader());
         inside->attchShader(filePath("maze_vertices.vs"),GL_VERTEX_SHADER);
         inside->attchShader(filePath("maze_insideboundary.gs"),GL_GEOMETRY_SHADER);
         inside->attchShader(filePath("maze_line.frag"),GL_FRAGMENT_SHADER);
         inside->linkProgram();
-        ShaderBucket["inside"] = std::move(inside);
-    }
-    {
-        pShader path (new Shader());
-        path->attchShader(filePath("maze_vertices.vs"),GL_VERTEX_SHADER);
-        path->attchShader(filePath("maze_path.gs"),GL_GEOMETRY_SHADER);
-        path->attchShader(filePath("maze_line.frag"),GL_FRAGMENT_SHADER);
-        path->linkProgram();
-        ShaderBucket["path"] = std::move(path);
+        ShaderBucket["line"] = std::move(inside);
     }
     {
         pShader test (new Shader());
@@ -227,16 +210,15 @@ void Map::writePathVert(){
     pathTable.clear();
     const GLfloat semiboundaryWidth = boundaryWidth / 2;
     const GLfloat xstart = -semiboundaryWidth * m, ystart = semiboundaryWidth * n;
-    
+    pathTable.push_back(Vertex(glm::vec3(xstart,ystart - semiboundaryWidth,0),pathColor));
     for (vector<Point>::const_reverse_iterator it = path.rbegin(); it != path.rend(); it++){
-        const GLfloat x = semiboundaryWidth * (2 * (it->first) + 1);
-        const GLfloat y = semiboundaryWidth * (2 * (it->second) + 1);
+        const GLfloat x = xstart + semiboundaryWidth * (2 * (it->first) + 1);
+        const GLfloat y = ystart - semiboundaryWidth * (2 * (it->second) + 1);
         pathTable.push_back(Vertex(glm::vec3(x,y,0),pathColor));
     }
+    pathTable.push_back(Vertex(glm::vec3(xstart + semiboundaryWidth * (2 * m),ystart - semiboundaryWidth * (2 * n - 1),0),pathColor));
 }
-void Path::draw(){
-    GLuint EBO;
-    BindVertex(EBO);
+void Path::draw() const{
     if (shader == nullptr){
         std::cerr<<"havn't bind shader"<<std::endl;
         return;
@@ -244,24 +226,10 @@ void Path::draw(){
     else
         shader ->use();
     glBindVertexArray(VAO);
-    //glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
-    glDrawElements(shape, static_cast<GLsizei>(vertexNum), GL_UNSIGNED_INT, 0);
+    glDrawArrays(shape, front, static_cast<GLsizei>(back - front));
+    //glDrawElements(shape, static_cast<GLsizei>((back - front - 1) * 2), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    glDeleteBuffers(1, &EBO);
+    
     return;
-}
-void Path::BindVertex(GLuint& EBO){
-    if (indices != nullptr)
-        delete [] indices;
-    const GLuint len = back - front;
-    indices = new GLuint[len * 2];
-    indices[0] = front;
-    for (GLuint i = front + 1; i < back - 1; i++){
-        const int count = (i - front) * 2 - 1;
-        indices[count] = i; indices[count+1] = i;
-    }
-    indices[len * 2 - 1] = back - 1;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 }
 }

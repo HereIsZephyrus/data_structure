@@ -64,11 +64,14 @@ void InitResource();
 
 class Path : public Primitive{
 public:
-    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINES, ShaderBucket["path"].get()),front(0),back(3){
+    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINE_STRIP, ShaderBucket["line"].get()),front(0){
         indices = nullptr;
+        back = vertexNum;
     }
-    ~Path(){delete [] indices;}
-    void draw() override;
+    ~Path(){
+        delete [] indices;
+    }
+    void draw() const override;
     bool Finished() const {return back == vertexNum;}
     void StepIn() {++back;}
     void StepOut() {++front;}
@@ -76,7 +79,7 @@ protected:
     GLuint front,back;
     GLuint* indices;
 private:
-    void BindVertex(GLuint& EBO);
+    void BindVertex();
 };
 }
 #endif /* component_hpp */
