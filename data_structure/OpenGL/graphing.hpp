@@ -48,9 +48,8 @@ public:
         glDeleteVertexArrays(1,&VAO);
         glDeleteBuffers(1,&VBO);
     }
-    void draw() const;
-    friend void clipByShape();
-private:
+    virtual void draw();
+protected:
     GLuint VAO,VBO;
     Shader* shader;
     GLenum shape;

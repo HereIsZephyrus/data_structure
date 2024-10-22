@@ -8,6 +8,7 @@
 #ifndef component_hpp
 #define component_hpp
 #include <vector>
+#include <map>
 #include "../OpenGL/graphing.hpp"
 namespace maze{
 using std::vector;
@@ -28,27 +29,25 @@ private:
     }
 };
 
+typedef std::pair<int, int> Point;
 class Map {
     using matrix = vector<vector<bool>>;
     size_t n,m;
     matrix horiBoundary,vertBoundary;
-    struct Point{unsigned int x,y;};
     vector<Point> path;
     vector<Vertex> boundaryTable,pathTable;
-    int current;
 public:
     Map():n(0),m(0){visited = nullptr;}
     ~Map(){}
     void generate();
-    void solve();
-    void step(){++current;}
+    bool solve();
     void clear();
     void autostep();
-    bool Finished() const{return current < 0 || current == path.size();}
-    const matrix& getHoriBoundary(){return horiBoundary;}
-    const matrix& getVertBoundary(){return vertBoundary;}
     const vector<Vertex>& getBoundaryVert(){return boundaryTable;}
     const vector<Vertex>& getPathVert(){return pathTable;}
+    const vector<Point>& getPath(){return path;}
+    const size_t getN() const {return n;}
+    const size_t getM() const {return m;}
 protected:
     void GenerateSize();
     bool DFS(unsigned int cx,unsigned int cy);
@@ -58,7 +57,26 @@ private:
     static constexpr glm::vec3 boundaryColor = glm::vec3(255,255,255);
     static constexpr glm::vec3 pathColor = glm::vec3(0,0,255);
     bool** visited;
+    void writePathVert();
+    static constexpr float boundaryWidth = 0.1f;
 };
 void InitResource();
+
+class Path : public Primitive{
+public:
+    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINES, ShaderBucket["path"].get()),front(0),back(3){
+        indices = nullptr;
+    }
+    ~Path(){delete [] indices;}
+    void draw() override;
+    bool Finished() const {return back == vertexNum;}
+    void StepIn() {++back;}
+    void StepOut() {++front;}
+protected:
+    GLuint front,back;
+    GLuint* indices;
+private:
+    void BindVertex(GLuint& EBO);
+};
 }
 #endif /* component_hpp */

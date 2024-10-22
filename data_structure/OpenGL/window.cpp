@@ -68,12 +68,3 @@ int initOpenGL(GLFWwindow *&window,std::string windowName) {
     HAS_INIT_OPENGL_CONTEXT = true;
     return 0;
 }
-
-namespace maze{
-void DrawBasicWindow(GLFWwindow *&window,const Primitive& boundary){
-    std::vector<Vertex> center = {Vertex(glm::vec3(0,0,0),glm::vec3{255,0,255})};
-    Primitive outBoundary(center, GL_POINTS,ShaderBucket["outside"].get());
-    outBoundary.draw();
-    boundary.draw();
-}
-}

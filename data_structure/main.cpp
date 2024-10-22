@@ -47,29 +47,40 @@ int maze_main(){
     InitResource();
     Map map;
     map.generate();
-    Primitive boundary(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
-    map.solve();
+    Primitive* boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
+    Path* path = nullptr;
+    if (map.solve())
+        path = new Path(map.getPathVert());
     
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        boundary.draw();
+        boundary->draw();
+        if (path != nullptr)
+            path->draw();
         if (Recorder::getRecord().autoStepping)
             map.autostep();
         else if (Recorder::getRecord().toStepOver){
-            if (!map.Finished())
-                map.step();
+            if (!path->Finished())
+                path->StepIn();
             else{
                 map.clear();
                 map.generate();
                 map.solve();
+                delete boundary;
+                delete path;
+                boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
+                path = new Path(map.getPathVert());
             }
+            Recorder::getRecord().toStepOver = false;
         }
         
         glfwSwapBuffers(window);
     }
     
+    delete boundary;
+    delete path;
     glfwDestroyWindow(window);
     glfwTerminate();
     WindowParas::getInstance().window = nullptr;
