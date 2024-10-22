@@ -78,8 +78,8 @@
             filePath = "data_structure/applications/component.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "280"
-            endingLineNumber = "280"
+            startingLineNumber = "310"
+            endingLineNumber = "310"
             landmarkName = "Clear(path, boundary, map)"
             landmarkType = "9">
          </BreakpointContent>

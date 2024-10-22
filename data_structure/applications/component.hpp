@@ -69,12 +69,8 @@ public:
 };
 class Path : public Primitive{
 public:
-    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINE_STRIP, ShaderBucket["line"].get()),front(0),back(1){
-        indices = nullptr;
-    }
-    ~Path(){
-        delete [] indices;
-    }
+    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINE_STRIP, ShaderBucket["line"].get()),front(0),back(1){}
+    ~Path(){}
     void draw() const override;
     bool Showed() const {return back == vertexNum;}
     bool Eliminated() const {return front == vertexNum-1;}
@@ -83,7 +79,6 @@ public:
     bool autostep();
 protected:
     GLuint front,back;
-    GLuint* indices;
 };
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void Clear(Path*& path, Boundary*& boundary,Map& map);

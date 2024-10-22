@@ -255,7 +255,8 @@ void Boundary::draw() const{
 }
 bool Path::autostep(){
     const double currentTime = glfwGetTime(),lastTime = Recorder::getRecord().autoNextTime;
-    if (currentTime - lastTime > 0.1){
+    const float t = 0.2f * std::abs(static_cast<int>(back - 5)) / vertexNum + 0.05;
+    if (currentTime - lastTime > t){
         Recorder::getRecord().autoNextTime = currentTime;
         if (!Showed())
             StepIn();
@@ -263,6 +264,35 @@ bool Path::autostep(){
             StepOut();
         else
             return false;
+    }else{
+        const double ratio = (currentTime - lastTime) / t;
+        if (!Showed()){
+            const GLfloat dx = vertices[back * 6] - vertices[(back-1) * 6];
+            const GLfloat dy = vertices[back * 6 + 1] - vertices[(back-1) * 6 + 1];
+            const glm::vec3 color = {vertices[3],vertices[4],vertices[5]};
+            const glm::vec3 p1 = {vertices[(back-1) * 6],vertices[(back-1) * 6 + 1],0};
+            const glm::vec3 p2 = {
+                static_cast<GLfloat>(vertices[(back-1) * 6] + dx * ratio),
+                static_cast<GLfloat>(vertices[(back-1) * 6 + 1] + dy * ratio),0,
+            };
+            std::vector<Vertex> tempLine{Vertex(p1,color),Vertex(p2,color)};
+            Path tempPath(tempLine);
+            tempPath.StepIn();
+            tempPath.draw();
+        }else if (!Eliminated() && front){
+            const GLfloat dx = vertices[front * 6] - vertices[(front-1) * 6];
+            const GLfloat dy = vertices[front * 6 + 1] - vertices[(front-1) * 6 + 1];
+            const glm::vec3 color = {vertices[3],vertices[4],vertices[5]};
+            const glm::vec3 p1 = {vertices[front * 6],vertices[front * 6 + 1],0};
+            const glm::vec3 p2 = {
+                static_cast<GLfloat>(vertices[front * 6] - dx * (1-ratio)),
+                static_cast<GLfloat>(vertices[front * 6 + 1] - dy * (1-ratio)),0,
+            };
+            std::vector<Vertex> tempLine{Vertex(p1,color),Vertex(p2,color)};
+            Path tempPath(tempLine);
+            tempPath.StepIn();
+            tempPath.draw();
+        }
     }
     return true;
 }
