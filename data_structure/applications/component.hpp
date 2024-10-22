@@ -64,15 +64,15 @@ void InitResource();
 
 class Path : public Primitive{
 public:
-    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINE_STRIP, ShaderBucket["line"].get()),front(0){
+    Path(const std::vector<Vertex>& pathVertex):Primitive(pathVertex, GL_LINE_STRIP, ShaderBucket["line"].get()),front(0),back(1){
         indices = nullptr;
-        back = vertexNum;
     }
     ~Path(){
         delete [] indices;
     }
     void draw() const override;
-    bool Finished() const {return back == vertexNum;}
+    bool Showed() const {return back == vertexNum;}
+    bool Eliminated() const {return front == vertexNum-1;}
     void StepIn() {++back;}
     void StepOut() {++front;}
 protected:
@@ -81,5 +81,6 @@ protected:
 private:
     void BindVertex();
 };
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 }
 #endif /* component_hpp */

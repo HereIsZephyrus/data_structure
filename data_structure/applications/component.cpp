@@ -225,11 +225,19 @@ void Path::draw() const{
     }
     else
         shader ->use();
+    GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    glUniform1f(thicknessLoc,0.04f);
     glBindVertexArray(VAO);
     glDrawArrays(shape, front, static_cast<GLsizei>(back - front));
     //glDrawElements(shape, static_cast<GLsizei>((back - front - 1) * 2), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     
     return;
+}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode){
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+        Recorder::getRecord().toStepOver = true;
 }
 }

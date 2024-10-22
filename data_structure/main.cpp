@@ -45,6 +45,7 @@ int maze_main(){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-迷宫") != 0)
         return -1;
     InitResource();
+    glfwSetKeyCallback(window, key_callback);
     Map map;
     map.generate();
     Primitive* boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
@@ -57,25 +58,27 @@ int maze_main(){
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         boundary->draw();
-        if (path != nullptr)
+        if (path != nullptr){
             path->draw();
-        if (Recorder::getRecord().autoStepping)
-            map.autostep();
-        else if (Recorder::getRecord().toStepOver){
-            if (!path->Finished())
-                path->StepIn();
-            else{
-                map.clear();
-                map.generate();
-                map.solve();
-                delete boundary;
-                delete path;
-                boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
-                path = new Path(map.getPathVert());
+            if (Recorder::getRecord().autoStepping)
+                map.autostep();
+            else if (Recorder::getRecord().toStepOver){
+                if (!path->Showed())
+                    path->StepIn();
+                else if (!path->Eliminated())
+                    path->StepOut();
+                else{
+                    map.clear();
+                    map.generate();
+                    map.solve();
+                    delete boundary;
+                    delete path;
+                    boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
+                    path = new Path(map.getPathVert());
+                }
+                Recorder::getRecord().toStepOver = false;
             }
-            Recorder::getRecord().toStepOver = false;
         }
-        
         glfwSwapBuffers(window);
     }
     
