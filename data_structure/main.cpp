@@ -45,14 +45,15 @@ int maze_main(){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-迷宫") != 0)
         return -1;
     InitResource();
-    glfwSetKeyCallback(window, key_callback);
+    glfwSetKeyCallback(window, keyCallback);
     Map map;
     map.generate();
-    Primitive* boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
+    Boundary* boundary = new Boundary(map.getBoundaryVert());
     Path* path = nullptr;
     if (map.solve())
         path = new Path(map.getPathVert());
-    
+    Recorder& record = Recorder::getRecord();
+    record.mazeShowUpStartTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
@@ -60,25 +61,21 @@ int maze_main(){
         boundary->draw();
         if (path != nullptr){
             path->draw();
-            if (Recorder::getRecord().autoStepping)
-                map.autostep();
-            else if (Recorder::getRecord().toStepOver){
+            if (record.autoStepping){
+                if (!path->autostep())
+                    Clear(path,boundary,map);
+            }
+            else if (record.toStepOver){
                 if (!path->Showed())
                     path->StepIn();
                 else if (!path->Eliminated())
                     path->StepOut();
-                else{
-                    map.clear();
-                    map.generate();
-                    map.solve();
-                    delete boundary;
-                    delete path;
-                    boundary = new Primitive(map.getBoundaryVert(), GL_LINES,ShaderBucket["line"].get());
-                    path = new Path(map.getPathVert());
-                }
-                Recorder::getRecord().toStepOver = false;
+                else
+                    Clear(path,boundary,map);
+                record.toStepOver = false;
             }
-        }
+        }else if(record.toStepOver || record.autoStepping)
+            Clear(path,boundary,map);
         glfwSwapBuffers(window);
     }
     

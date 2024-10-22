@@ -109,7 +109,9 @@ void Primitive::draw() const {
     else
         shader ->use();
     GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
     glUniform1f(thicknessLoc,0.02f);
+    glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
     glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
     glBindVertexArray(0);

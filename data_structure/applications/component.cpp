@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <cmath>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -17,7 +18,7 @@ namespace maze{
 void Map::generate(){
     srand((unsigned int)time(0));
     GenerateSize();
-    std::cout<<"n = "<<n<<",m = "<<m<<std::endl;
+    // std::cout<<"n = "<<n<<",m = "<<m<<std::endl;
     const GLfloat xstart = -boundaryWidth * m / 2, ystart = boundaryWidth * n / 2;
     {//top
         glm::vec3 p1 = glm::vec3(xstart,ystart,0.0);
@@ -121,7 +122,7 @@ void Map::generate(){
         vertBoundary.push_back(vertical);
     }
     
-     //check map
+    /*
     for (int i = 0; i < n; i++){
         std::cout<<' ';
         for (int j = 0; j < m; j++)
@@ -135,14 +136,13 @@ void Map::generate(){
     for (int j = 0; j < m; j++)
         std::cout<<horiBoundary[n][j]<<' ';
     std::cout<<std::endl;
+     */
 }
 void Map::clear(){
     horiBoundary.clear(); vertBoundary.clear();
+    boundaryTable.clear();
     path.clear();
     n = 0; m = 0;
-}
-void Map::autostep(){
-    
 }
 bool Map::solve() {
     visited = new bool*[n];
@@ -153,8 +153,8 @@ bool Map::solve() {
     }
     bool canAccess = DFS(0, 0);
     if (canAccess){
-        for (vector<Point>::const_reverse_iterator it = path.rbegin(); it != path.rend(); it++)
-            std::cout<<it->first<<' '<<it->second<<std::endl;
+        //for (vector<Point>::const_reverse_iterator it = path.rbegin(); it != path.rend(); it++)
+        //    std::cout<<it->first<<' '<<it->second<<std::endl;
         writePathVert();
     }
     for (int i = 0; i < n; i++)
@@ -226,7 +226,9 @@ void Path::draw() const{
     else
         shader ->use();
     GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
     glUniform1f(thicknessLoc,0.04f);
+    glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
     glDrawArrays(shape, front, static_cast<GLsizei>(back - front));
     //glDrawElements(shape, static_cast<GLsizei>((back - front - 1) * 2), GL_UNSIGNED_INT, 0);
@@ -234,10 +236,57 @@ void Path::draw() const{
     
     return;
 }
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode){
+void Boundary::draw() const{
+    //std::cout<<"Draw is running"<<std::endl;
+    if (shader == nullptr){
+        std::cerr<<"havn't bind shader"<<std::endl;
+        return;
+    }
+    else
+        shader ->use();
+    GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(thicknessLoc,0.02f);
+    const double currentTime = glfwGetTime(),lastTime = Recorder::getRecord().mazeShowUpStartTime;
+    glUniform1f(transparentLoc,std::min(static_cast<float>(currentTime - lastTime)/1.0f,1.0f));
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
+bool Path::autostep(){
+    const double currentTime = glfwGetTime(),lastTime = Recorder::getRecord().autoNextTime;
+    if (currentTime - lastTime > 0.1){
+        Recorder::getRecord().autoNextTime = currentTime;
+        if (!Showed())
+            StepIn();
+        else if (!Eliminated())
+            StepOut();
+        else
+            return false;
+    }
+    return true;
+}
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode){
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
         Recorder::getRecord().toStepOver = true;
+    if (key == GLFW_KEY_A && action == GLFW_PRESS){
+        Recorder::getRecord().autoStepping = !Recorder::getRecord().autoStepping;
+        Recorder::getRecord().autoNextTime = glfwGetTime();
+    }
+}
+void Clear(Path*& path, Boundary*& boundary,Map& map){
+    delete boundary;
+    delete path;
+    map.clear();
+    map.generate();
+    //std::cout<<Recorder::getRecord().mazeShowUpStartTime<<' '<<glfwGetTime();
+    Recorder::getRecord().mazeShowUpStartTime = glfwGetTime();
+    boundary = new Boundary(map.getBoundaryVert());
+    if (map.solve())
+        path = new Path(map.getPathVert());
+    else
+        path = nullptr;
 }
 }
