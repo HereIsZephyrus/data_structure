@@ -30,8 +30,8 @@
             filePath = "data_structure/applications/component.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "138"
-            endingLineNumber = "138"
+            startingLineNumber = "156"
+            endingLineNumber = "156"
             landmarkName = "Map::solve()"
             landmarkType = "7">
          </BreakpointContent>

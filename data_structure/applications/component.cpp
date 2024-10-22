@@ -19,28 +19,28 @@ void Map::generate(){
     srand((unsigned int)time(0));
     GenerateSize();
     std::cout<<"n = "<<n<<",m = "<<m<<std::endl;
-    const float xstart = boundaryWidth * n / 2, ystart = -boundaryWidth * m / 2;
+    const float xstart = -boundaryWidth * m / 2, ystart = boundaryWidth * n / 2;
     {//top
-        glm::vec3 p1 = glm::vec3(ystart,xstart,0.0);
-        glm::vec3 p2 = glm::vec3(ystart + m * boundaryWidth,xstart,0.0);
+        glm::vec3 p1 = glm::vec3(xstart,ystart,0.0);
+        glm::vec3 p2 = glm::vec3(xstart + m * boundaryWidth,ystart,0.0);
         boundaryTable.push_back(Vertex(p1,boundaryColor));
         boundaryTable.push_back(Vertex(p2,boundaryColor));
     }
     {//bottom
-        glm::vec3 p1 = glm::vec3(ystart,xstart - n * boundaryWidth,0.0);
-        glm::vec3 p2 = glm::vec3(ystart + m * boundaryWidth,xstart - n * boundaryWidth,0.0);
+        glm::vec3 p1 = glm::vec3(xstart,ystart - n * boundaryWidth,0.0);
+        glm::vec3 p2 = glm::vec3(xstart + m * boundaryWidth,ystart - n * boundaryWidth,0.0);
         boundaryTable.push_back(Vertex(p1,boundaryColor));
         boundaryTable.push_back(Vertex(p2,boundaryColor));
     }
     {//left
-        glm::vec3 p1 = glm::vec3(ystart,xstart - boundaryWidth,0.0);
-        glm::vec3 p2 = glm::vec3(ystart,xstart - n * boundaryWidth,0.0);
+        glm::vec3 p1 = glm::vec3(xstart,ystart - boundaryWidth,0.0);
+        glm::vec3 p2 = glm::vec3(xstart,ystart - n * boundaryWidth,0.0);
         boundaryTable.push_back(Vertex(p1,boundaryColor));
         boundaryTable.push_back(Vertex(p2,boundaryColor));
     }
     {//right
-        glm::vec3 p1 = glm::vec3(ystart + m * boundaryWidth,xstart,0.0);
-        glm::vec3 p2 = glm::vec3(ystart + m * boundaryWidth,xstart - (n-1) * boundaryWidth,0.0);
+        glm::vec3 p1 = glm::vec3(xstart + m * boundaryWidth,ystart,0.0);
+        glm::vec3 p2 = glm::vec3(xstart + m * boundaryWidth,ystart - (n-1) * boundaryWidth,0.0);
         boundaryTable.push_back(Vertex(p1,boundaryColor));
         boundaryTable.push_back(Vertex(p2,boundaryColor));
     }
@@ -56,8 +56,8 @@ void Map::generate(){
             bool existwall = rand()%10 >= 6;
             horizontal.push_back(existwall);
             if (existwall){
-                glm::vec3 p1 = glm::vec3(ystart + j * boundaryWidth,xstart - i * boundaryWidth,0.0);
-                glm::vec3 p2 = glm::vec3(ystart + (j+1) * boundaryWidth,xstart - i * boundaryWidth,0.0);
+                glm::vec3 p1 = glm::vec3(xstart + j * boundaryWidth,ystart - i * boundaryWidth,0.0);
+                glm::vec3 p2 = glm::vec3(xstart + (j+1) * boundaryWidth,ystart - i * boundaryWidth,0.0);
                 boundaryTable.push_back(Vertex(p1,boundaryColor));
                 boundaryTable.push_back(Vertex(p2,boundaryColor));
             }
@@ -75,19 +75,28 @@ void Map::generate(){
         vector<bool> vertical;
         vertical.push_back(false);
         vertical.push_back(false);
-        for (int i = 0; i < m-1; i++)
-            vertical.push_back(true);
+        for (int j = 2; j < m; j++){
+            bool existwall = rand()%10 >= 6;
+            vertical.push_back(existwall);
+            if (existwall){
+                glm::vec3 p1 = glm::vec3(xstart + j * boundaryWidth,ystart,0.0);
+                glm::vec3 p2 = glm::vec3(xstart + j * boundaryWidth,ystart - 1 * boundaryWidth,0.0);
+                boundaryTable.push_back(Vertex(p1,boundaryColor));
+                boundaryTable.push_back(Vertex(p2,boundaryColor));
+            }
+        }
+        vertical.push_back(true);
         vertBoundary.push_back(vertical);
     }
     for (int i = 1; i < n-1; i++){
         vector<bool> vertical;
         vertical.push_back(true);
-        for (int j = 1; j < m; j++){
+        for (int j = 1; j <= m-1; j++){
             bool existwall = rand()%10 >= 6;
             vertical.push_back(existwall);
             if (existwall){
-                glm::vec3 p1 = glm::vec3(ystart + (j+1) * boundaryWidth,xstart - i * boundaryWidth,0.0);
-                glm::vec3 p2 = glm::vec3(ystart + (j+1) * boundaryWidth,xstart - (i+1) * boundaryWidth,0.0);
+                glm::vec3 p1 = glm::vec3(xstart + j * boundaryWidth,ystart - i * boundaryWidth,0.0);
+                glm::vec3 p2 = glm::vec3(xstart + j * boundaryWidth,ystart - (i+1) * boundaryWidth,0.0);
                 boundaryTable.push_back(Vertex(p1,boundaryColor));
                 boundaryTable.push_back(Vertex(p2,boundaryColor));
             }
@@ -97,8 +106,17 @@ void Map::generate(){
     }
     {
         vector<bool> vertical;
-        for (int i = 0; i < m-1; i++)
-            vertical.push_back(true);
+        vertical.push_back(true);
+        for (int j = 1; j < m-1; j++){
+            bool existwall = rand()%10 >= 6;
+            vertical.push_back(existwall);
+            if (existwall){
+                glm::vec3 p1 = glm::vec3(xstart + j * boundaryWidth,ystart - (n-1) * boundaryWidth,0.0);
+                glm::vec3 p2 = glm::vec3(xstart + j * boundaryWidth,ystart - n * boundaryWidth,0.0);
+                boundaryTable.push_back(Vertex(p1,boundaryColor));
+                boundaryTable.push_back(Vertex(p2,boundaryColor));
+            }
+        }
         vertical.push_back(false);
         vertical.push_back(false);
         vertBoundary.push_back(vertical);
@@ -150,13 +168,13 @@ void Map::GenerateSize(){
     m = rand() % 8 + 3;
 }
 bool Map::DFS(unsigned int cx,unsigned int cy){
-    if (cx == n-1 && cy == m-1){
+    if (cx == m-1 && cy == n-1){
         path.push_back(Point(cx,cy));
         return true;
     }
     for (int dir = 0; dir < 4; dir++){
         const int nx = cx + dx[dir], ny = cy + dy[dir];
-        if (nx < 0 || ny < 0 || nx >= n || ny >= m || visited[nx][ny])
+        if (nx < 0 || ny < 0 || nx >= m || ny >= n || visited[nx][ny])
             continue;
         bool goRight = ny > cy && !vertBoundary[nx][ny];
         bool goLeft = ny < cy && !vertBoundary[cx][ny];
