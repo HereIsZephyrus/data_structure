@@ -15,26 +15,49 @@
 #include "../OpenGL/graphing.hpp"
 namespace maze{
 void Map::generate(){
-    const float semiboundaryWidth = 50.0f;
+    const float boundaryWidth = 0.1f;
     srand((unsigned int)time(0));
     GenerateSize();
-    const float xstart = -semiboundaryWidth * n, ystart = semiboundaryWidth * m;
+    std::cout<<"n = "<<n<<",m = "<<m<<std::endl;
+    const float xstart = boundaryWidth * n / 2, ystart = -boundaryWidth * m / 2;
+    {//top
+        glm::vec3 p1 = glm::vec3(ystart,xstart,0.0);
+        glm::vec3 p2 = glm::vec3(ystart + m * boundaryWidth,xstart,0.0);
+        boundaryTable.push_back(Vertex(p1,boundaryColor));
+        boundaryTable.push_back(Vertex(p2,boundaryColor));
+    }
+    {//bottom
+        glm::vec3 p1 = glm::vec3(ystart,xstart - n * boundaryWidth,0.0);
+        glm::vec3 p2 = glm::vec3(ystart + m * boundaryWidth,xstart - n * boundaryWidth,0.0);
+        boundaryTable.push_back(Vertex(p1,boundaryColor));
+        boundaryTable.push_back(Vertex(p2,boundaryColor));
+    }
+    {//left
+        glm::vec3 p1 = glm::vec3(ystart,xstart - boundaryWidth,0.0);
+        glm::vec3 p2 = glm::vec3(ystart,xstart - n * boundaryWidth,0.0);
+        boundaryTable.push_back(Vertex(p1,boundaryColor));
+        boundaryTable.push_back(Vertex(p2,boundaryColor));
+    }
+    {//right
+        glm::vec3 p1 = glm::vec3(ystart + m * boundaryWidth,xstart,0.0);
+        glm::vec3 p2 = glm::vec3(ystart + m * boundaryWidth,xstart - (n-1) * boundaryWidth,0.0);
+        boundaryTable.push_back(Vertex(p1,boundaryColor));
+        boundaryTable.push_back(Vertex(p2,boundaryColor));
+    }
     {
         vector<bool> horizontal;
         for (int i = 0; i < m; i++)
             horizontal.push_back(true);
         horiBoundary.push_back(horizontal);
     }
-    for (int i = 0; i < n-1; i++){
+    for (int i = 1; i <= n-1; i++){
         vector<bool> horizontal;
         for (int j = 0; j < m; j++){
-            bool existwall = rand()%10 > 6;
+            bool existwall = rand()%10 >= 6;
             horizontal.push_back(existwall);
             if (existwall){
-                glm::vec3 p1 = glm::vec3(xstart + j * semiboundaryWidth * 2,ystart - (i+1) * semiboundaryWidth * 2,0.0);
-                glm::vec3 p2 = glm::vec3(xstart + (j+1) * semiboundaryWidth * 2,ystart - (i+1) * semiboundaryWidth * 2,0.0);
-                std::cout<<"horizontal:"<<p1.x<<' '<<p1.y<<' '<<p1.z<<' '<<std::endl;
-                std::cout<<"horizontal:"<<p2.x<<' '<<p2.y<<' '<<p2.z<<' '<<std::endl;
+                glm::vec3 p1 = glm::vec3(ystart + j * boundaryWidth,xstart - i * boundaryWidth,0.0);
+                glm::vec3 p2 = glm::vec3(ystart + (j+1) * boundaryWidth,xstart - i * boundaryWidth,0.0);
                 boundaryTable.push_back(Vertex(p1,boundaryColor));
                 boundaryTable.push_back(Vertex(p2,boundaryColor));
             }
@@ -56,17 +79,15 @@ void Map::generate(){
             vertical.push_back(true);
         vertBoundary.push_back(vertical);
     }
-    for (int i = 0; i < n-2; i++){
+    for (int i = 1; i < n-1; i++){
         vector<bool> vertical;
         vertical.push_back(true);
-        for (int j = 0; j < m-1; j++){
-            bool existwall = rand()%10 > 6;
+        for (int j = 1; j < m; j++){
+            bool existwall = rand()%10 >= 6;
             vertical.push_back(existwall);
             if (existwall){
-                glm::vec3 p1 = glm::vec3(xstart + (j+1) * semiboundaryWidth * 2,ystart - i * semiboundaryWidth * 2,0.0);
-                glm::vec3 p2 = glm::vec3(xstart + (j+1) * semiboundaryWidth * 2,ystart - (i+1) * semiboundaryWidth * 2,0.0);
-                std::cout<<"vertical:"<<p1.x<<' '<<p1.y<<' '<<p1.z<<' '<<std::endl;
-                std::cout<<"vertical:"<<p2.x<<' '<<p2.y<<' '<<p2.z<<' '<<std::endl;
+                glm::vec3 p1 = glm::vec3(ystart + (j+1) * boundaryWidth,xstart - i * boundaryWidth,0.0);
+                glm::vec3 p2 = glm::vec3(ystart + (j+1) * boundaryWidth,xstart - (i+1) * boundaryWidth,0.0);
                 boundaryTable.push_back(Vertex(p1,boundaryColor));
                 boundaryTable.push_back(Vertex(p2,boundaryColor));
             }
@@ -177,6 +198,13 @@ void InitResource(){
         path->attchShader(filePath("maze_line.frag"),GL_FRAGMENT_SHADER);
         path->linkProgram();
         ShaderBucket["path"] = std::move(path);
+    }
+    {
+        pShader test (new Shader());
+        test->attchShader(filePath("test_vertices.vs"),GL_VERTEX_SHADER);
+        test->attchShader(filePath("test_line.frag"),GL_FRAGMENT_SHADER);
+        test->linkProgram();
+        ShaderBucket["test"] = std::move(test);
     }
 }
 }

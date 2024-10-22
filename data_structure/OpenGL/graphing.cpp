@@ -89,7 +89,7 @@ Primitive::Primitive(const std::vector<Vertex>& inputVertex,GLenum shp,Shader* i
     glGenBuffers(1,&VBO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum * 6, vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -109,7 +109,7 @@ void Primitive::draw() const{
     else
         shader ->use();
     glBindVertexArray(VAO);
-    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum)*6);
     glBindVertexArray(0);
     return;
 }

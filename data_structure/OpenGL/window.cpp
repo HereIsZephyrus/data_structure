@@ -59,6 +59,7 @@ int initOpenGL(GLFWwindow *&window,std::string windowName) {
         return -2;
     }
     windowPara.defaultAlpha = glfwGetWindowOpacity(window);
+    glfwGetFramebufferSize(window, &windowPara.SCREEN_WIDTH, &windowPara.SCREEN_HEIGHT);
     glViewport(0, 0, windowPara.SCREEN_WIDTH, windowPara.SCREEN_HEIGHT);
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_MULTISAMPLE);
@@ -70,7 +71,7 @@ int initOpenGL(GLFWwindow *&window,std::string windowName) {
 
 namespace maze{
 void DrawBasicWindow(GLFWwindow *&window,const Primitive& boundary){
-    std::vector<Vertex> center = {Vertex(glm::vec3(0,0,0),glm::vec3{0,0,0})};
+    std::vector<Vertex> center = {Vertex(glm::vec3(0,0,0),glm::vec3{255,0,255})};
     Primitive outBoundary(center, GL_POINTS,ShaderBucket["outside"].get());
     outBoundary.draw();
     boundary.draw();

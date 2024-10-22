@@ -34,8 +34,8 @@ public:
     void attchShader(std::string shader,GLuint type);
     void attchShader(const GLchar* path,GLuint type);
     void linkProgram();
-    GLuint program;
 private:
+    GLuint program;
     std::string readGLSLfile(const GLchar* filePath);
 };
 class Primitive{

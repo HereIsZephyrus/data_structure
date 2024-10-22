@@ -1,12 +1,12 @@
 #version 410 core
 
-layout(points) in;
-layout(triangle_strip, max_vertices = 20) out;
+layout(point) in;
+layout(triangle_strip, max_vertices = 10) out;
 in vec3 geoColor[];
 out vec3 fragColor;
 uniform int m,n;
 uniform float blocksize;
-const float semiboundaryWidth = 50.0f;
+const float semiboundaryWidth = 0.05f;
 void main() {
     fragColor = geoColor[0];
     vec4 center =  gl_in[0].gl_Position;

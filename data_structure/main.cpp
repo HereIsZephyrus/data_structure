@@ -54,7 +54,7 @@ int maze_main(){
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        DrawBasicWindow(window,boundary);
+        boundary.draw();
         if (Recorder::getRecord().autoStepping)
             map.autostep();
         else if (Recorder::getRecord().toStepOver){
@@ -66,6 +66,7 @@ int maze_main(){
                 map.solve();
             }
         }
+        
         glfwSwapBuffers(window);
     }
     
