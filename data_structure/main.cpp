@@ -13,7 +13,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "OpenGL/environment.hpp"
+#include "OpenGL/graphing.hpp"
 #include "OpenGL/window.hpp"
 #include "applications/component.hpp"
 
@@ -44,14 +44,16 @@ int maze_main(){
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-迷宫") != 0)
         return -1;
+    InitResource();
     Map map;
     map.generate();
+    Primitive boundary(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
     map.solve();
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        DrawBasicWindow(window,map.getHoriBoundary(),map.getVertBoundary());
+        DrawBasicWindow(window,boundary);
         if (Recorder::getRecord().autoStepping)
             map.autostep();
         else if (Recorder::getRecord().toStepOver){

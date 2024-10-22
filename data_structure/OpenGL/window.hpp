@@ -14,6 +14,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include "graphing.hpp"
 
 inline bool HAS_INIT_OPENGL_CONTEXT = false;
 int initOpenGL(GLFWwindow *&window,std::string windowName);
@@ -43,6 +44,6 @@ private:
 
 namespace maze {
 using matrix = std::vector<std::vector<bool>>;
-void DrawBasicWindow(GLFWwindow *&window,const matrix& horiBoundary, const matrix& vertBoundary);
+void DrawBasicWindow(GLFWwindow *&window,const Primitive& boundary);
 }
 #endif /* window_hpp */

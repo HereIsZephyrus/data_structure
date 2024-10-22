@@ -14,6 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "window.hpp"
+#include "graphing.hpp"
 
 GLfloat WindowParas::screen2normalX(GLdouble screenX){
     return  (2.0f * static_cast<GLfloat>(screenX/ SCREEN_WIDTH * xScale)) - 1.0f;
@@ -64,4 +65,13 @@ int initOpenGL(GLFWwindow *&window,std::string windowName) {
     std::cout<<version<<std::endl;
     HAS_INIT_OPENGL_CONTEXT = true;
     return 0;
+}
+
+namespace maze{
+void DrawBasicWindow(GLFWwindow *&window,const Primitive& boundary){
+    std::vector<Vertex> center = {Vertex(glm::vec3(0,0,0),glm::vec3{0,0,0})};
+    Primitive outBoundary(center, GL_POINTS,ShaderBucket["outside"].get());
+    outBoundary.draw();
+    boundary.draw();
+}
 }
