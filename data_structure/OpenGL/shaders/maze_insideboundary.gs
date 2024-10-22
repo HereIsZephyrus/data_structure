@@ -2,9 +2,11 @@
 
 layout(lines) in;
 layout(triangle_strip, max_vertices = 10) out;
-
+in vec3 geoColor[];
+out vec3 fragColor;
 const float thickness = 5.0f;
 void main() {
+    fragColor = geoColor[0];
     vec4 p0 =  gl_in[0].gl_Position;
     vec4 p1 =  gl_in[1].gl_Position;
     vec2 dig1 = vec2(0.0,0.0);

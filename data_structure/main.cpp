@@ -49,6 +49,7 @@ int maze_main(){
     map.generate();
     Primitive boundary(map.getBoundaryVert(), GL_LINES,ShaderBucket["inside"].get());
     map.solve();
+    
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);

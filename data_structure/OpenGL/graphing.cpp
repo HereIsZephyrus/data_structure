@@ -14,9 +14,9 @@
 std::map<std::string,pShader > ShaderBucket;
 GLchar* filePath(const char* fileName){
     //checkSourceRelevantPath();
-    const char * tcbsearchPath ="../../../../../../../../Program/data_strcture/OpenGL/shaders/";
-    GLchar* resource = new char[strlen(tcbsearchPath) + strlen(fileName) + 1];
-    strcpy(resource, tcbsearchPath);
+    const char * shaderSearchPath ="/Users/channingtong/Program/data_structure/data_structure/OpenGL/shaders/";
+    GLchar* resource = new char[strlen(shaderSearchPath) + strlen(fileName) + 1];
+    strcpy(resource, shaderSearchPath);
     strcat(resource, fileName);
     return resource;
 }
@@ -80,9 +80,9 @@ Primitive::Primitive(const std::vector<Vertex>& inputVertex,GLenum shp,Shader* i
         vertices[i * 6] = inputVertex[i].position[0];
         vertices[i * 6 + 1] = inputVertex[i].position[1];
         vertices[i * 6 + 2] = inputVertex[i].position[2];
-        vertices[i * 6] = inputVertex[i].color[0];
-        vertices[i * 6 + 1] = inputVertex[i].color[1];
-        vertices[i * 6 + 2] = inputVertex[i].color[2];
+        vertices[i * 6 + 3] = inputVertex[i].color[0];
+        vertices[i * 6 + 4] = inputVertex[i].color[1];
+        vertices[i * 6 + 5] = inputVertex[i].color[2];
     }
     shader = inputshader;
     glGenVertexArrays(1,&VAO);

@@ -37,10 +37,10 @@ class Map {
     vector<Vertex> boundaryTable,pathTable;
     int current;
 public:
-    Map():n(0),m(0){}
+    Map():n(0),m(0){visited = nullptr;}
     ~Map(){}
     void generate();
-    void solve() {current = DFS(0, 0)? 0 : -1;}
+    void solve();
     void step(){++current;}
     void clear();
     void autostep();
@@ -55,8 +55,9 @@ protected:
 private:
     static constexpr int dx[4] = {-1,0,1,0};
     static constexpr int dy[4] = {0,1,0,-1};
-    static constexpr glm::vec3 boundaryColor = glm::vec3(0,0,0);
-    static constexpr glm::vec3 pathColor = glm::vec3(0,0,1);
+    static constexpr glm::vec3 boundaryColor = glm::vec3(255,255,255);
+    static constexpr glm::vec3 pathColor = glm::vec3(0,0,255);
+    bool** visited;
 };
 void InitResource();
 }

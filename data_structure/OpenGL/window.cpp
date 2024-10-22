@@ -59,6 +59,7 @@ int initOpenGL(GLFWwindow *&window,std::string windowName) {
         return -2;
     }
     windowPara.defaultAlpha = glfwGetWindowOpacity(window);
+    glViewport(0, 0, windowPara.SCREEN_WIDTH, windowPara.SCREEN_HEIGHT);
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_MULTISAMPLE);
     const GLubyte* version = glGetString(GL_VERSION);

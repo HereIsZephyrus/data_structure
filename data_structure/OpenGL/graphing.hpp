@@ -23,7 +23,7 @@ struct Vertex {
 GLchar* filePath(const char* fileName);
 class Shader{
 public:
-   Shader(const Shader&) = delete;
+    Shader(const Shader&) = delete;
     void operator=(const Shader&) = delete;
     Shader(){
         this->program = glCreateProgram();
