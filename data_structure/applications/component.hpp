@@ -125,13 +125,14 @@ public:
     Velocity getV() const {return v;}
     void move();
     void setV(Velocity newV) {v = newV;}
-    void collideWith(const Ball* rhs);
+    void collideWith(Ball* rhs);
 private:
     GLfloat radius,m;
     Velocity v;
     static constexpr float m_setting[2] = {1,2};
     static constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
     static constexpr GLfloat radius_setting[2] = {0.01,0.03};
+    static constexpr float timeRatio = 0.02f;
 };
 class Arrow : public Primitive{
 public:

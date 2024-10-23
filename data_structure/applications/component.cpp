@@ -316,7 +316,6 @@ void Ball::draw() const{
     glBindVertexArray(0);
 }
 void Ball::move(){
-    constexpr float timeRatio = 0.01;
     constexpr float fuss = 0.99;
     vertices[0] += timeRatio * v.vx;
     vertices[1] += timeRatio * v.vy;
@@ -338,21 +337,23 @@ void Ball::move(){
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-void Ball::collideWith(const Ball* rhs){
+void Ball::collideWith(Ball* rhs){
     constexpr float coefficientOfRestitution = 1.0f;
-    const GLfloat dx = vertices[0] - rhs->getX(),dy = vertices[1] - rhs->getY();
+    const GLfloat dx = (rhs->getX() - vertices[0]) * 0.75,dy =  rhs->getY() - vertices[1];
     const GLfloat distance = std::sqrt(dx * dx + dy * dy);
     const GLfloat nx = dx / distance,ny = dy / distance;
     const GLfloat relativeVelocityX = rhs->getV().vx - v.vx;
     const GLfloat relativeVelocityY = rhs->getV().vy - v.vy;
     const GLfloat velocityAlongNormal = relativeVelocityX * nx + relativeVelocityY * ny;
     if (velocityAlongNormal > 0) return;
-    const float impulse = -(1 + coefficientOfRestitution) * velocityAlongNormal;
+    const float impulse = (1 + coefficientOfRestitution) * velocityAlongNormal;
     v.vx += impulse * nx;
     v.vy += impulse * ny;
-    float overlap = radius + rhs->getR() - distance;
-    vertices[0] -= nx * overlap * 0.5f;
-    vertices[1] -= ny * overlap * 0.5f;
+    (rhs->v).vx -= impulse * nx;
+    (rhs->v).vy -= impulse * ny;
+    //float overlap = radius + rhs->getR() - distance;
+    //vertices[0] -= nx * overlap * 0.5f;
+    //vertices[1] -= ny * overlap * 0.5f;
 }
 void Arrow::draw() const{
     shader ->use();
@@ -413,10 +414,10 @@ void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize){
     balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
 }
 bool isColliding(const Ball* a,const Ball* b){
-    constexpr GLfloat bias = 0.001;
-    const GLfloat dx = a->getX() - b->getX(),dy = a->getY() - b->getY();
+    constexpr GLfloat bias = 0.0001;
+    const GLfloat dx = (a->getX() - b->getX()) * 0.75,dy = a->getY() - b->getY();
     const GLfloat r = a->getR() + b->getR() + bias;
-    if (dx * dx + dy * dy <= r)
+    if (dx * dx + dy * dy <= r * r)
         return true;
     return false;
 }

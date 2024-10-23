@@ -109,7 +109,6 @@ int binarytree_main(){
             for (size_t j = i+1; j < balls.size(); j++){
                 if (isColliding(balls[i].get(),balls[j].get())){
                     balls[i]->collideWith(balls[j].get());
-                    balls[j]->collideWith(balls[i].get());
                 }
             }
         if (arrow != nullptr)
