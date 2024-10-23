@@ -430,7 +430,7 @@ void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsiz
     //balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
 }
 bool isColliding(const BallPara* a,const BallPara* b){
-    constexpr GLfloat bias = 0;
+    constexpr GLfloat bias = radius_setting[BallType::normal] / 100;
     const GLfloat dx = (a->getX() - b->getX()) * 0.75,dy = a->getY() - b->getY();
     const GLfloat r = a->getR() + b->getR() + bias;
     if (dx * dx + dy * dy <= r * r)

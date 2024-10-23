@@ -159,7 +159,7 @@ private:
     GLfloat &x,&y;
     Velocity v;
     static constexpr float timeRatio = 0.05f;
-    static constexpr float fuss = 0.99f;
+    static constexpr float fuss = 0.998f;
     static constexpr GLsizei stride = 6;
     static constexpr float coefficientOfRestitution = 1.0f;
 };
