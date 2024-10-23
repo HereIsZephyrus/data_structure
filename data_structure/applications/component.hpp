@@ -123,6 +123,8 @@ public:
     }
     void draw() const override;
     void update();
+    GLfloat& getX(GLuint num){return vertices[num * 6];}
+    GLfloat& getY(GLuint num){return vertices[num * 6+1];}
 private:
     GLfloat radius;
     glm::vec3 color;
@@ -142,23 +144,22 @@ extern std::unique_ptr<Arrow> arrow;
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
-constexpr float m_setting[2] = {1,2};
 constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
 constexpr GLfloat radius_setting[2] = {0.01,0.03};
 class BallPara{
 public:
-    BallPara(const glm::vec3& loc,BallType type,GLuint index):
-    radius(radius_setting[type]),m(m_setting[type]),v(Velocity(0, 0)),vertLocation(index){}
-    GLfloat getX() const {return ballVertices->vertices[vertLocation * stride];}
-    GLfloat getY() const {return ballVertices->vertices[vertLocation * stride + 1];}
+    BallPara(GLfloat& xloc, GLfloat& yloc,BallType type):
+    radius(radius_setting[type]),v(Velocity(0, 0)),x(xloc),y(yloc){}
+    GLfloat getX() const {return x;}
+    GLfloat getY() const {return y;}
     GLfloat getR() const {return radius;}
     Velocity getV() const {return v;}
     void move();
     void setV(Velocity newV) {v = newV;}
     void collideWith(BallPara* rhs);
 private:
-    GLfloat radius,m;
-    GLuint vertLocation;
+    GLfloat radius;
+    GLfloat& x,y;
     Velocity v;
     static constexpr float timeRatio = 0.05f;
     static constexpr float fuss = 0.99f;

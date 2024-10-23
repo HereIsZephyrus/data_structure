@@ -332,30 +332,17 @@ void Ball::update(){
     glBindVertexArray(0);
 }
 void BallPara::move(){
-    const GLuint Xloc = vertLocation * 6,Yloc = vertLocation * 6 + 1;
-    ballVertices->vertices[Xloc] += timeRatio * v.vx;
-    ballVertices->vertices[Yloc] += timeRatio * v.vy;
+    x += timeRatio * v.vx;
+    y += timeRatio * v.vy;
     const GLfloat lowbound = -1 + radius, upBound = 1 - radius;
-    if (ballVertices->vertices[Xloc] < lowbound){
-        ballVertices->vertices[Xloc] = lowbound*2 - ballVertices->vertices[Xloc];
-        v.vx = - v.vx * coefficientOfRestitution;
-    }
-    if (ballVertices->vertices[Yloc] < lowbound){
-        ballVertices->vertices[Yloc] = lowbound*2 - ballVertices->vertices[Yloc];
-        v.vy = - v.vy * coefficientOfRestitution;
-    }
-    if (ballVertices->vertices[Xloc] > upBound){
-        ballVertices->vertices[Xloc] = upBound*2 - ballVertices->vertices[Xloc];
-        v.vx = - v.vx * coefficientOfRestitution;
-    }
-    if (ballVertices->vertices[Yloc] > upBound){
-        ballVertices->vertices[Yloc] = upBound*2 - ballVertices->vertices[Yloc];
-        v.vy = - v.vy * coefficientOfRestitution;
-    }
+    if (x < lowbound){x = lowbound*2 - x;v.vx = - v.vx * coefficientOfRestitution;}
+    if (y < lowbound){y = lowbound*2 - y;v.vy = - v.vy * coefficientOfRestitution;}
+    if (x > upBound){x = upBound*2 - x;v.vx = - v.vx * coefficientOfRestitution;}
+    if (y > upBound){y = upBound*2 - y;v.vy = - v.vy * coefficientOfRestitution;}
     v.vx *= fuss; v.vy *= fuss;
 }
 void BallPara::collideWith(BallPara* rhs){
-    const GLfloat dx = (rhs->getX() - ballVertices->vertices[vertLocation * 6]) * 0.75,dy =  rhs->getY() - ballVertices->vertices[vertLocation * 6 + 1];
+    const GLfloat dx = (rhs->getX() - x) * 0.75,dy =  rhs->getY() - y;
     const GLfloat distance = std::sqrt(dx * dx + dy * dy);
     const GLfloat nx = dx / distance,ny = dy / distance;
     const GLfloat relativeVelocityX = rhs->getV().vx - v.vx;
@@ -415,17 +402,25 @@ void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsiz
         for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
             const GLfloat randX = i + (30 + rand()%50)/100 * xgrid,randY = j + (30 + rand()%50)/100 * ygrid;
             const glm::vec3 location = glm::vec3(randX,randY,0);
-            if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0){
+            if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0)
                 powerVert = Vertex(location,color_setting[BallType::power]);
-                powerBall = std::make_unique<BallPara>(location,BallType::power,0);
-            }
-            else{
+            else
                 normalVert.push_back(Vertex(location,color_setting[BallType::normal]));
-                balls.push_back(std::make_unique<BallPara>(location,BallType::normal,normalVert.size()-1));
-            }
         }
     ballVertices = std::make_unique<Ball>(normalVert,radius_setting[BallType::normal],color_setting[BallType::normal]);
     powerVertices = std::make_unique<Ball>(powerVert,radius_setting[BallType::power],color_setting[BallType::power]);
+    GLuint counter = 0;
+    for (GLfloat i = -1.0 + xgrid; i < 1.0f - xgrid; i += xgrid)
+        for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
+            if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0){
+                powerBall = std::make_unique<BallPara>(powerVertices->getX(0),powerVertices->getY(0),BallType::power);
+                std::cout<<powerVertices->getX(0)<<" "<<powerVertices->getY(0)<<std::endl;
+            }
+            else{
+                balls.push_back(std::make_unique<BallPara>(ballVertices->getX(counter),ballVertices->getY(counter),BallType::normal));
+                ++counter;
+            }
+        }
     //balls.push_back(std::make_unique<Ball>(glm::vec3(0,0,0),BallType::power));
     //Recorder::getRecord().powerLocation = 0;
     //balls.push_back(std::make_unique<Ball>(glm::vec3(0.4,0.4,0),BallType::normal));
@@ -464,8 +459,8 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
     if ( recorder.stretching){
         WindowParas& windowPara = WindowParas::getInstance();
         const glm::vec3 strechEndLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
-        const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc;
         const glm::vec3 powerloc = glm::vec3(powerBall->getX(),powerBall->getY(),0.0);
+        const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc - powerloc;
         std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
         std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
         const glm::vec3 arrowColor = glm::vec3(1.0,0.0,1.0);
