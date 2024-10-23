@@ -75,16 +75,16 @@ public:
     bool contains(const Object& x) const{return contains(x, this->root);}
     void insert(const Object& x){return insert(x, this->root);}
     void remove(const Object& x){return remove(x, this->root);}
-    void clear();
+    void clear(){destroy(this->root);}
     const Object& findMin() const{
         if (this -> root == nullptr)
             throw std::logic_error("the tree is empty");
-        return findMin(this->root);
+        return findMin(this->root)->element;
     }
     const Object& findMax() const{
         if (this -> root == nullptr)
             throw std::logic_error("the tree is empty");
-        return findMax(this->root);
+        return findMax(this->root)->element;
     }
     static ostream& preorder(ostream& os){
         outputFlag = TraversalType::preorder;
@@ -171,6 +171,13 @@ private:
                     p = p->left;
                 delete ret_p;
             }
+        }
+    }
+    void destroy(node* p){
+        if (p != nullptr){
+            destroy(p->left);
+            destroy(p->right);
+            delete p;
         }
     }
 };
