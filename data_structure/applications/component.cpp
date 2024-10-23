@@ -350,11 +350,14 @@ void BallPara::collideWith(BallPara* rhs){
     const GLfloat relativeVelocityY = rhs->getV().vy - v.vy;
     const GLfloat velocityAlongNormal = relativeVelocityX * nx + relativeVelocityY * ny;
     if (velocityAlongNormal > 0) return;
-    const float impulse = (1 + coefficientOfRestitution) * velocityAlongNormal;
-    v.vx += impulse * nx;
-    v.vy += impulse * ny;
-    (rhs->v).vx -= impulse * nx;
-    (rhs->v).vy -= impulse * ny;
+    const float impulse = -(1 + coefficientOfRestitution) * velocityAlongNormal;
+    float totalMass = mass + rhs->getM();
+    float impulsePerMassA = impulse * rhs->getM() / totalMass;
+    float impulsePerMassB = impulse * mass / totalMass;
+    v.vx -= impulsePerMassA * nx;
+    v.vy -= impulsePerMassA * ny;
+    (rhs->v).vx += impulsePerMassB * nx;
+    (rhs->v).vy += impulsePerMassB * ny;
 }
 void Arrow::draw() const{
     shader ->use();

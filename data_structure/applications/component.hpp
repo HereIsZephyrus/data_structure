@@ -141,25 +141,27 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
 constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
 constexpr GLfloat radius_setting[2] = {0.005,0.01};
+constexpr GLfloat m_setting[2] = {1,100};
 class BallPara{
 public:
     BallPara(GLfloat& xloc, GLfloat& yloc,BallType type):
-    radius(radius_setting[type]),v(Velocity(0, 0)),x(xloc),y(yloc){}
+    radius(radius_setting[type]),mass(m_setting[type]),v(Velocity(0, 0)),x(xloc),y(yloc){}
     GLfloat getX() const {return x;}
     GLfloat getY() const {return y;}
     GLfloat getR() const {return radius;}
     Velocity getV() const {return v;}
+    GLfloat getM() const {return mass;}
     void move();
     void setV(Velocity newV) {v = newV;}
     void collideWith(BallPara* rhs);
 private:
-    GLfloat radius;
+    GLfloat radius,mass;
     GLfloat &x,&y;
     Velocity v;
     static constexpr float timeRatio = 0.05f;
     static constexpr float fuss = 0.99f;
     static constexpr GLsizei stride = 6;
-    static constexpr float coefficientOfRestitution = 0.9f;
+    static constexpr float coefficientOfRestitution = 1.0f;
 };
 extern std::vector<std::unique_ptr<BallPara>> balls;
 extern std::unique_ptr<BallPara> powerBall;

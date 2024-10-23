@@ -95,7 +95,7 @@ int binarytree_main(){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
-    Scatter(balls,36);
+    Scatter(balls,18);
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
