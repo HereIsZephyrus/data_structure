@@ -114,21 +114,16 @@ private:
 class Ball : public Primitive{
 public:
     Ball(const std::vector<Vertex>& ballVertices,GLfloat r,glm::vec3 c):
-    Primitive(ballVertices,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){
-        ballnum = static_cast<GLsizei>(ballVertices.size());
-    }
+    Primitive(ballVertices,GL_POINTS,ShaderBucket["ball"].get()),radius(r),color(c){}
     Ball(const Vertex ballVertex,GLfloat r,glm::vec3 c):
-    Primitive(ballVertex,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){
-        ballnum = 1;
-    }
+    Primitive(ballVertex,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){}
     void draw() const override;
     void update();
     GLfloat& getX(GLuint num){return vertices[num * 6];}
-    GLfloat& getY(GLuint num){return vertices[num * 6+1];}
+    GLfloat& getY(GLuint num){return vertices[num * 6 + 1];}
 private:
     GLfloat radius;
     glm::vec3 color;
-    GLsizei ballnum;
 };
 class Arrow : public Primitive{
 public:
@@ -145,7 +140,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
 constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
-constexpr GLfloat radius_setting[2] = {0.01,0.03};
+constexpr GLfloat radius_setting[2] = {0.005,0.01};
 class BallPara{
 public:
     BallPara(GLfloat& xloc, GLfloat& yloc,BallType type):
@@ -159,7 +154,7 @@ public:
     void collideWith(BallPara* rhs);
 private:
     GLfloat radius;
-    GLfloat& x,y;
+    GLfloat &x,&y;
     Velocity v;
     static constexpr float timeRatio = 0.05f;
     static constexpr float fuss = 0.99f;

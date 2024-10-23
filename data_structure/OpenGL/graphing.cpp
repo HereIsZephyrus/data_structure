@@ -75,6 +75,7 @@ Primitive::Primitive(const std::vector<Vertex>& inputVertex,GLenum shp,Shader* i
     stride = 6;
     shape = shp;
     vertexNum = inputVertex.size();
+    //std::cout<<vertexNum<<std::endl;
     vertices = new GLfloat[vertexNum * 6];
     for (size_t i = 0; i < vertexNum; i++){
         vertices[i * 6] = inputVertex[i].position[0];        vertices[i * 6 + 1] = inputVertex[i].position[1];        vertices[i * 6 + 2] = inputVertex[i].position[2];

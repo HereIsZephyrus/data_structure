@@ -315,7 +315,7 @@ void Ball::draw() const{
     glUniform1f(radiusLoc,radius);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
-    glDrawArrays(shape, 0, ballnum);
+    glDrawArrays(shape, 0, vertexNum);
     glBindVertexArray(0);
 }
 void Ball::update(){
@@ -334,6 +334,7 @@ void Ball::update(){
 void BallPara::move(){
     x += timeRatio * v.vx;
     y += timeRatio * v.vy;
+    //std::cout<<v.vy<<std::endl;
     const GLfloat lowbound = -1 + radius, upBound = 1 - radius;
     if (x < lowbound){x = lowbound*2 - x;v.vx = - v.vx * coefficientOfRestitution;}
     if (y < lowbound){y = lowbound*2 - y;v.vy = - v.vy * coefficientOfRestitution;}
@@ -414,7 +415,6 @@ void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsiz
         for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
             if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0){
                 powerBall = std::make_unique<BallPara>(powerVertices->getX(0),powerVertices->getY(0),BallType::power);
-                std::cout<<powerVertices->getX(0)<<" "<<powerVertices->getY(0)<<std::endl;
             }
             else{
                 balls.push_back(std::make_unique<BallPara>(ballVertices->getX(counter),ballVertices->getY(counter),BallType::normal));
@@ -427,7 +427,7 @@ void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsiz
     //balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
 }
 bool isColliding(const BallPara* a,const BallPara* b){
-    constexpr GLfloat bias = 0.0001;
+    constexpr GLfloat bias = 0;
     const GLfloat dx = (a->getX() - b->getX()) * 0.75,dy = a->getY() - b->getY();
     const GLfloat r = a->getR() + b->getR() + bias;
     if (dx * dx + dy * dy <= r * r)
@@ -460,9 +460,9 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
         WindowParas& windowPara = WindowParas::getInstance();
         const glm::vec3 strechEndLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
         const glm::vec3 powerloc = glm::vec3(powerBall->getX(),powerBall->getY(),0.0);
-        const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc - powerloc;
-        std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
-        std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
+        const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc;
+        //std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
+        //std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
         const glm::vec3 arrowColor = glm::vec3(1.0,0.0,1.0);
         if (arrow != nullptr)
             arrow = nullptr;

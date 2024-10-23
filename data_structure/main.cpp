@@ -95,23 +95,30 @@ int binarytree_main(){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
-    Scatter(balls,72);
+    Scatter(balls,36);
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        for (size_t i = 0; i < balls.size(); i++)
-            balls[i]->move();
-        for (size_t i = 0; i < balls.size(); i++)
-            for (size_t j = i+1; j < balls.size(); j++){
-                if (isColliding(balls[i].get(),balls[j].get())){
-                    balls[i]->collideWith(balls[j].get());
+        if (Recorder::getRecord().startmoving){
+            powerBall->move();
+            for (size_t i = 0; i < balls.size(); i++)
+                balls[i]->move();
+            for (size_t i = 0; i < balls.size(); i++)
+                if (isColliding(powerBall.get(),balls[i].get())){
+                    powerBall->collideWith(balls[i].get());
                 }
-            }
+            for (size_t i = 0; i < balls.size(); i++)
+                for (size_t j = i+1; j < balls.size(); j++){
+                    if (isColliding(balls[i].get(),balls[j].get())){
+                        balls[i]->collideWith(balls[j].get());
+                    }
+                }
+        }
         ballVertices->update();
-        ballVertices->draw();
         powerVertices->update();
+        ballVertices->draw();
         powerVertices->draw();
         if (arrow != nullptr)
             arrow->draw();
