@@ -303,8 +303,11 @@ void Clear(Path*& path, Boundary*& boundary,Map& map){
 }
 }
 namespace binarytree {
-std::vector<std::unique_ptr<Ball>> balls;
+std::vector<std::unique_ptr<BallPara>> balls;
 std::unique_ptr<Arrow> arrow = nullptr;
+std::unique_ptr<Ball> ballVertices = nullptr;
+std::unique_ptr<Ball> powerVertices = nullptr;
+std::unique_ptr<BallPara> powerBall = nullptr;
 void Ball::draw() const{
     shader ->use();
     GLuint radiusLoc = glGetUniformLocation(shader->program, "radius");
@@ -312,19 +315,10 @@ void Ball::draw() const{
     glUniform1f(radiusLoc,radius);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
-    glDrawArrays(shape, 0, 1);
+    glDrawArrays(shape, 0, ballnum);
     glBindVertexArray(0);
 }
-void Ball::move(){
-    constexpr float fuss = 0.99;
-    vertices[0] += timeRatio * v.vx;
-    vertices[1] += timeRatio * v.vy;
-    const GLfloat lowbound = -1 + radius, upBound = 1 - radius;
-    if (vertices[0] < lowbound){vertices[0] = lowbound*2 - vertices[0];v.vx = - v.vx;}
-    if (vertices[1] < lowbound){vertices[1] = lowbound*2 - vertices[1];v.vy = - v.vy;}
-    if (vertices[0] > upBound){vertices[0] = upBound*2 - vertices[0];v.vx = - v.vx;}
-    if (vertices[1] > upBound){vertices[1] = upBound*2 - vertices[1];v.vy = - v.vy;}
-    //v.vx *= fuss; v.vy *= fuss;
+void Ball::update(){
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum * 6, vertices, GL_STATIC_DRAW);
@@ -337,9 +331,31 @@ void Ball::move(){
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-void Ball::collideWith(Ball* rhs){
-    constexpr float coefficientOfRestitution = 1.0f;
-    const GLfloat dx = (rhs->getX() - vertices[0]) * 0.75,dy =  rhs->getY() - vertices[1];
+void BallPara::move(){
+    const GLuint Xloc = vertLocation * 6,Yloc = vertLocation * 6 + 1;
+    ballVertices->vertices[Xloc] += timeRatio * v.vx;
+    ballVertices->vertices[Yloc] += timeRatio * v.vy;
+    const GLfloat lowbound = -1 + radius, upBound = 1 - radius;
+    if (ballVertices->vertices[Xloc] < lowbound){
+        ballVertices->vertices[Xloc] = lowbound*2 - ballVertices->vertices[Xloc];
+        v.vx = - v.vx * coefficientOfRestitution;
+    }
+    if (ballVertices->vertices[Yloc] < lowbound){
+        ballVertices->vertices[Yloc] = lowbound*2 - ballVertices->vertices[Yloc];
+        v.vy = - v.vy * coefficientOfRestitution;
+    }
+    if (ballVertices->vertices[Xloc] > upBound){
+        ballVertices->vertices[Xloc] = upBound*2 - ballVertices->vertices[Xloc];
+        v.vx = - v.vx * coefficientOfRestitution;
+    }
+    if (ballVertices->vertices[Yloc] > upBound){
+        ballVertices->vertices[Yloc] = upBound*2 - ballVertices->vertices[Yloc];
+        v.vy = - v.vy * coefficientOfRestitution;
+    }
+    v.vx *= fuss; v.vy *= fuss;
+}
+void BallPara::collideWith(BallPara* rhs){
+    const GLfloat dx = (rhs->getX() - ballVertices->vertices[vertLocation * 6]) * 0.75,dy =  rhs->getY() - ballVertices->vertices[vertLocation * 6 + 1];
     const GLfloat distance = std::sqrt(dx * dx + dy * dy);
     const GLfloat nx = dx / distance,ny = dy / distance;
     const GLfloat relativeVelocityX = rhs->getV().vx - v.vx;
@@ -351,9 +367,6 @@ void Ball::collideWith(Ball* rhs){
     v.vy += impulse * ny;
     (rhs->v).vx -= impulse * nx;
     (rhs->v).vy -= impulse * ny;
-    //float overlap = radius + rhs->getR() - distance;
-    //vertices[0] -= nx * overlap * 0.5f;
-    //vertices[1] -= ny * overlap * 0.5f;
 }
 void Arrow::draw() const{
     shader ->use();
@@ -393,27 +406,32 @@ void InitResource(GLFWwindow *& window){
     }
     srand((unsigned int)time(0));
 }
-void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize){
-    /*
+void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsize){
     WindowParas& windowPara = WindowParas::getInstance();
     const GLfloat xgrid = gridsize / windowPara.WINDOW_WIDTH,ygrid = gridsize / windowPara.WINDOW_HEIGHT;
-    for (GLfloat i = -1 + xgrid; i < 1.0f - xgrid; i += xgrid)
-        for (GLfloat j = - 1 + ygrid; j < 1.0f - ygrid; j += ygrid){
-            const GLfloat randX = i + (rand()%100)/100 * xgrid,randY = j + (rand()%100)/100 * ygrid;
-            if (i <= 0 && i + xgrid > 0 && j <=0 && j + ygrid > 0){
-                balls.push_back(std::make_unique<Ball>(glm::vec3(randX,randY,0),BallType::power));
-                Recorder::getRecord().powerLocation = balls.size()-1;
+    std::vector<Vertex> normalVert;
+    Vertex powerVert;
+    for (GLfloat i = -1.0 + xgrid; i < 1.0f - xgrid; i += xgrid)
+        for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
+            const GLfloat randX = i + (30 + rand()%50)/100 * xgrid,randY = j + (30 + rand()%50)/100 * ygrid;
+            const glm::vec3 location = glm::vec3(randX,randY,0);
+            if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0){
+                powerVert = Vertex(location,color_setting[BallType::power]);
+                powerBall = std::make_unique<BallPara>(location,BallType::power,0);
             }
-            else
-                balls.push_back(std::make_unique<Ball>(glm::vec3(randX,randY,0),BallType::normal));
+            else{
+                normalVert.push_back(Vertex(location,color_setting[BallType::normal]));
+                balls.push_back(std::make_unique<BallPara>(location,BallType::normal,normalVert.size()-1));
+            }
         }
-*/
-    balls.push_back(std::make_unique<Ball>(glm::vec3(0,0,0),BallType::power));
-    Recorder::getRecord().powerLocation = 0;
-    balls.push_back(std::make_unique<Ball>(glm::vec3(0.4,0.4,0),BallType::normal));
-    balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
+    ballVertices = std::make_unique<Ball>(normalVert,radius_setting[BallType::normal],color_setting[BallType::normal]);
+    powerVertices = std::make_unique<Ball>(powerVert,radius_setting[BallType::power],color_setting[BallType::power]);
+    //balls.push_back(std::make_unique<Ball>(glm::vec3(0,0,0),BallType::power));
+    //Recorder::getRecord().powerLocation = 0;
+    //balls.push_back(std::make_unique<Ball>(glm::vec3(0.4,0.4,0),BallType::normal));
+    //balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
 }
-bool isColliding(const Ball* a,const Ball* b){
+bool isColliding(const BallPara* a,const BallPara* b){
     constexpr GLfloat bias = 0.0001;
     const GLfloat dx = (a->getX() - b->getX()) * 0.75,dy = a->getY() - b->getY();
     const GLfloat r = a->getR() + b->getR() + bias;
@@ -437,7 +455,7 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods){
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && recorder.stretching){
         recorder.stretching = false;
         recorder.startmoving = true;
-        balls[recorder.powerLocation]->setV(arrow->getV());
+        powerBall->setV(arrow->getV());
         arrow = nullptr;
     }
 }
@@ -447,8 +465,7 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
         WindowParas& windowPara = WindowParas::getInstance();
         const glm::vec3 strechEndLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
         const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc;
-        const int powerInd = recorder.powerLocation;
-        const glm::vec3 powerloc = glm::vec3(balls[powerInd]->getX(),balls[powerInd]->getY(),0.0);
+        const glm::vec3 powerloc = glm::vec3(powerBall->getX(),powerBall->getY(),0.0);
         std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
         std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
         const glm::vec3 arrowColor = glm::vec3(1.0,0.0,1.0);

@@ -21,6 +21,7 @@ struct Vertex {
     glm::vec3 color;
 };
 GLchar* filePath(const char* fileName);
+namespace binarytree{class BallPara;}
 class Shader{
 public:
     Shader(const Shader&) = delete;
@@ -50,6 +51,7 @@ public:
         glDeleteBuffers(1,&VBO);
     }
     virtual void draw() const;
+    friend binarytree::BallPara;
 protected:
     GLuint VAO,VBO;
     Shader* shader;

@@ -103,36 +103,30 @@ public:
     }
     Recorder(const Recorder&) = delete;
     void operator=(const Recorder&) = delete;
-    int powerLocation;
     bool stretching,startmoving;
     glm::vec3 strechStartLoc;
 private:
     Recorder(){
         stretching = false;
         startmoving = false;
-        powerLocation = 0;
     }
 };
 class Ball : public Primitive{
 public:
-    Ball(const glm::vec3& loc,BallType type):
-    Primitive(Vertex(loc,color_setting[type]),GL_POINT,ShaderBucket["ball"].get()),
-    radius(radius_setting[type]),m(m_setting[type]),v(Velocity(0, 0)){}
+    Ball(const std::vector<Vertex>& ballVertices,GLfloat r,glm::vec3 c):
+    Primitive(ballVertices,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){
+        ballnum = static_cast<GLsizei>(ballVertices.size());
+    }
+    Ball(const Vertex ballVertex,GLfloat r,glm::vec3 c):
+    Primitive(ballVertex,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){
+        ballnum = 1;
+    }
     void draw() const override;
-    GLfloat getX() const {return vertices[0];}
-    GLfloat getY() const {return vertices[1];}
-    GLfloat getR() const {return radius;}
-    Velocity getV() const {return v;}
-    void move();
-    void setV(Velocity newV) {v = newV;}
-    void collideWith(Ball* rhs);
+    void update();
 private:
-    GLfloat radius,m;
-    Velocity v;
-    static constexpr float m_setting[2] = {1,2};
-    static constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
-    static constexpr GLfloat radius_setting[2] = {0.01,0.03};
-    static constexpr float timeRatio = 0.02f;
+    GLfloat radius;
+    glm::vec3 color;
+    GLsizei ballnum;
 };
 class Arrow : public Primitive{
 public:
@@ -143,12 +137,37 @@ public:
 private:
     Velocity arrowV;
 };
+extern std::unique_ptr<Ball> ballVertices,powerVertices;
+extern std::unique_ptr<Arrow> arrow;
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
-void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize);
-bool isColliding(const Ball* a,const Ball* b);
-extern std::vector<std::unique_ptr<Ball>> balls;
-extern std::unique_ptr<Arrow> arrow;
+constexpr float m_setting[2] = {1,2};
+constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
+constexpr GLfloat radius_setting[2] = {0.01,0.03};
+class BallPara{
+public:
+    BallPara(const glm::vec3& loc,BallType type,GLuint index):
+    radius(radius_setting[type]),m(m_setting[type]),v(Velocity(0, 0)),vertLocation(index){}
+    GLfloat getX() const {return ballVertices->vertices[vertLocation * stride];}
+    GLfloat getY() const {return ballVertices->vertices[vertLocation * stride + 1];}
+    GLfloat getR() const {return radius;}
+    Velocity getV() const {return v;}
+    void move();
+    void setV(Velocity newV) {v = newV;}
+    void collideWith(BallPara* rhs);
+private:
+    GLfloat radius,m;
+    GLuint vertLocation;
+    Velocity v;
+    static constexpr float timeRatio = 0.05f;
+    static constexpr float fuss = 0.99f;
+    static constexpr GLsizei stride = 6;
+    static constexpr float coefficientOfRestitution = 0.9f;
+};
+extern std::vector<std::unique_ptr<BallPara>> balls;
+extern std::unique_ptr<BallPara> powerBall;
+void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsize);
+bool isColliding(const BallPara* a,const BallPara* b);
 }
 #endif /* component_hpp */

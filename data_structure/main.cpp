@@ -96,21 +96,23 @@ int binarytree_main(){
         return -1;
     InitResource(window);
     Scatter(balls,72);
-    glfwSwapInterval(2);
+    glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        for (size_t i = 0; i < balls.size(); i++){
-            balls[i]->draw();
+        for (size_t i = 0; i < balls.size(); i++)
             balls[i]->move();
-        }
         for (size_t i = 0; i < balls.size(); i++)
             for (size_t j = i+1; j < balls.size(); j++){
                 if (isColliding(balls[i].get(),balls[j].get())){
                     balls[i]->collideWith(balls[j].get());
                 }
             }
+        ballVertices->update();
+        ballVertices->draw();
+        powerVertices->update();
+        powerVertices->draw();
         if (arrow != nullptr)
             arrow->draw();
         glfwSwapBuffers(window);
