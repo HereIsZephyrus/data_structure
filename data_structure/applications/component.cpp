@@ -10,10 +10,12 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <memory>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "../OpenGL/graphing.hpp"
+#include "../OpenGL/window.hpp"
 namespace maze{
 void Map::generate(){
     srand((unsigned int)time(0));
@@ -189,21 +191,15 @@ bool Map::DFS(unsigned int cy,unsigned int cx){
     }
     return false;
 }
-void InitResource(){
+void InitResource(GLFWwindow *& window){
+    glfwSetKeyCallback(window, keyCallback);
     {
-        pShader inside (new Shader());
-        inside->attchShader(filePath("maze_vertices.vs"),GL_VERTEX_SHADER);
-        inside->attchShader(filePath("maze_insideboundary.gs"),GL_GEOMETRY_SHADER);
-        inside->attchShader(filePath("maze_line.frag"),GL_FRAGMENT_SHADER);
-        inside->linkProgram();
-        ShaderBucket["line"] = std::move(inside);
-    }
-    {
-        pShader test (new Shader());
-        test->attchShader(filePath("test_vertices.vs"),GL_VERTEX_SHADER);
-        test->attchShader(filePath("test_line.frag"),GL_FRAGMENT_SHADER);
-        test->linkProgram();
-        ShaderBucket["test"] = std::move(test);
+        pShader line (new Shader());
+        line->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        line->attchShader(filePath("maze_line.gs"),GL_GEOMETRY_SHADER);
+        line->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        line->linkProgram();
+        ShaderBucket["line"] = std::move(line);
     }
 }
 void Map::writePathVert(){
@@ -219,31 +215,17 @@ void Map::writePathVert(){
     pathTable.push_back(Vertex(glm::vec3(xstart + semiboundaryWidth * (2 * m),ystart - semiboundaryWidth * (2 * n - 1),0),pathColor));
 }
 void Path::draw() const{
-    if (shader == nullptr){
-        std::cerr<<"havn't bind shader"<<std::endl;
-        return;
-    }
-    else
-        shader ->use();
+    shader ->use();
     GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
     GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
     glUniform1f(thicknessLoc,0.04f);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
     glDrawArrays(shape, front, static_cast<GLsizei>(back - front));
-    //glDrawElements(shape, static_cast<GLsizei>((back - front - 1) * 2), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    
-    return;
 }
 void Boundary::draw() const{
-    //std::cout<<"Draw is running"<<std::endl;
-    if (shader == nullptr){
-        std::cerr<<"havn't bind shader"<<std::endl;
-        return;
-    }
-    else
-        shader ->use();
+    shader ->use();
     GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
     GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
     glUniform1f(thicknessLoc,0.02f);
@@ -318,5 +300,96 @@ void Clear(Path*& path, Boundary*& boundary,Map& map){
         path = new Path(map.getPathVert());
     else
         path = nullptr;
+}
+}
+namespace binarytree {
+std::vector<std::unique_ptr<Ball>> balls;
+std::unique_ptr<Arrow> arrow = nullptr;
+void Ball::draw() const{
+    shader ->use();
+    GLuint radiusLoc = glGetUniformLocation(shader->program, "radius");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(radiusLoc,radius);
+    glUniform1f(transparentLoc,1.0f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, 1);
+    glBindVertexArray(0);
+}
+void Arrow::draw() const{
+    shader ->use();
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(transparentLoc,1.0f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, 2);
+    glBindVertexArray(0);
+}
+void InitResource(GLFWwindow *& window){
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetMouseButtonCallback(window, mouseCallback);
+    glfwSetCursorPosCallback(window, cursorCallback);
+    {
+        pShader ball (new Shader());
+        ball->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        ball->attchShader(filePath("binarytree_ball.gs"),GL_GEOMETRY_SHADER);
+        ball->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        ball->linkProgram();
+        ShaderBucket["ball"] = std::move(ball);
+    }
+    {
+        pShader arrow (new Shader());
+        arrow->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        arrow->attchShader(filePath("binarytree_arrow.gs"),GL_GEOMETRY_SHADER);
+        arrow->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        arrow->linkProgram();
+        ShaderBucket["arrow"] = std::move(arrow);
+    }
+    {
+        pShader line (new Shader());
+        line->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        line->attchShader(filePath("maze_line.gs"),GL_GEOMETRY_SHADER);
+        line->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        line->linkProgram();
+        ShaderBucket["line"] = std::move(line);
+    }
+}
+void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize){
+    balls.push_back(std::make_unique<Ball>(glm::vec3(0,0,0),BallType::power));
+    Recorder::getRecord().powerLocation = 0;
+}
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+}
+void mouseCallback(GLFWwindow* window, int button, int action, int mods){
+    Recorder& recorder = Recorder::getRecord();
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !recorder.startmoving){
+        WindowParas& windowPara = WindowParas::getInstance();
+        recorder.stretching = true;
+        GLdouble xpos,ypos;
+        glfwGetCursorPos(windowPara.window, &xpos, &ypos);
+        recorder.strechStartLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
+    }
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && recorder.stretching){
+        recorder.stretching = false;
+        recorder.startmoving = true;
+        arrow = nullptr;
+    }
+}
+void cursorCallback(GLFWwindow* window, double xpos, double ypos){
+    Recorder& record = Recorder::getRecord();
+    if ( record.stretching){
+        WindowParas& windowPara = WindowParas::getInstance();
+        const glm::vec3 strechEndLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
+        const glm::vec3 delta = strechEndLoc - record.strechStartLoc;
+        const int powerInd = record.powerLocation;
+        const glm::vec3 powerloc = glm::vec3(balls[powerInd]->getX(),balls[powerInd]->getY(),0.0);
+        std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
+        std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
+        const glm::vec3 arrowColor = glm::vec3(1.0,0.0,1.0);
+        if (arrow != nullptr)
+            arrow = nullptr;
+        std::vector<Vertex> arrowVert = {Vertex(powerloc,arrowColor),Vertex(delta,arrowColor)};
+        arrow = std::make_unique<Arrow>(arrowVert);
+    }
 }
 }

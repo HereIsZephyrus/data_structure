@@ -77,14 +77,31 @@ Primitive::Primitive(const std::vector<Vertex>& inputVertex,GLenum shp,Shader* i
     vertexNum = inputVertex.size();
     vertices = new GLfloat[vertexNum * 6];
     for (size_t i = 0; i < vertexNum; i++){
-        vertices[i * 6] = inputVertex[i].position[0];
-        vertices[i * 6 + 1] = inputVertex[i].position[1];
-        vertices[i * 6 + 2] = inputVertex[i].position[2];
-        vertices[i * 6 + 3] = inputVertex[i].color[0];
-        vertices[i * 6 + 4] = inputVertex[i].color[1];
-        vertices[i * 6 + 5] = inputVertex[i].color[2];
+        vertices[i * 6] = inputVertex[i].position[0];        vertices[i * 6 + 1] = inputVertex[i].position[1];        vertices[i * 6 + 2] = inputVertex[i].position[2];
+        vertices[i * 6 + 3] = inputVertex[i].color[0];        vertices[i * 6 + 4] = inputVertex[i].color[1];        vertices[i * 6 + 5] = inputVertex[i].color[2];
     }
     shader = inputshader;
+    glGenVertexArrays(1,&VAO);
+    glGenBuffers(1,&VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum * 6, vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)(sizeof(GLfloat) * 3));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+Primitive::Primitive(const Vertex& inputVertex,GLenum shp,Shader* inputshader){
+    shader = inputshader;
+    vertexNum = 1;
+    vertices = new GLfloat[vertexNum * 6];
+    vertices[0] = inputVertex.position[0];        vertices[1] = inputVertex.position[1];        vertices[2] = inputVertex.position[2];
+    vertices[3] = inputVertex.color[0];        vertices[4] = inputVertex.color[1];        vertices[5] = inputVertex.color[2];
     glGenVertexArrays(1,&VAO);
     glGenBuffers(1,&VBO);
     glBindVertexArray(VAO);

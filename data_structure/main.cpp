@@ -10,6 +10,7 @@
 #include <benchmark/benchmark.h>
 #include <cstring>
 #include <string>
+#include <memory>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -18,6 +19,7 @@
 #include "applications/component.hpp"
 
 int maze_main();
+int binarytree_main();
 int main(int argc, char **argv){
     if (argc == 1){
         ::testing::InitGoogleTest(&argc, argv);
@@ -35,6 +37,7 @@ int main(int argc, char **argv){
         maze_main();
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
+        binarytree_main();
     }
     return 0;
 }
@@ -44,8 +47,7 @@ int maze_main(){
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-迷宫") != 0)
         return -1;
-    InitResource();
-    glfwSetKeyCallback(window, keyCallback);
+    InitResource(window);
     Map map;
     map.generate();
     Boundary* boundary = new Boundary(map.getBoundaryVert());
@@ -84,5 +86,27 @@ int maze_main(){
     glfwDestroyWindow(window);
     glfwTerminate();
     WindowParas::getInstance().window = nullptr;
+    return 0;
+}
+
+int binarytree_main(){
+    using namespace binarytree;
+    GLFWwindow *& window = WindowParas::getInstance().window;
+    if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
+        return -1;
+    InitResource(window);
+    Scatter(balls,0.2f);
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        glClearColor(0,0,0,0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for (std::vector<std::unique_ptr<Ball>>::const_iterator it = balls.begin(); it != balls.end(); it++)
+            (*it)->draw();
+        if (arrow != nullptr)
+            arrow->draw();
+        glfwSwapBuffers(window);
+    }
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 0;
 }

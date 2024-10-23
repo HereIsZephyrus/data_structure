@@ -60,7 +60,7 @@ private:
     void writePathVert();
     static constexpr float boundaryWidth = 0.1f;
 };
-void InitResource();
+void InitResource(GLFWwindow *& window);
 
 class Boundary : public Primitive{
 public:
@@ -82,5 +82,63 @@ protected:
 };
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void Clear(Path*& path, Boundary*& boundary,Map& map);
+}
+namespace binarytree{
+void InitResource(GLFWwindow *& window);
+enum BallType{
+    normal = 0,
+    power = 1
+};
+struct Velocity{
+    float value;
+    float direction;
+    Velocity(float v,float d){value = v; direction = d;}
+};
+class Recorder{
+public:
+    static Recorder& getRecord(){
+        static Recorder instance;
+        return instance;
+    }
+    Recorder(const Recorder&) = delete;
+    void operator=(const Recorder&) = delete;
+    int powerLocation;
+    bool stretching,startmoving;
+    glm::vec3 strechStartLoc;
+private:
+    Recorder(){
+        stretching = false;
+        startmoving = false;
+        powerLocation = 0;
+    }
+};
+class Ball : public Primitive{
+public:
+    Ball(const glm::vec3& loc,BallType type):
+    Primitive(Vertex(loc,color_setting[type]),GL_POINT,ShaderBucket["ball"].get()),
+    radius(radius_setting[type]),m(m_setting[type]),v(Velocity(0, 0)),x(loc.x),y(loc.y){}
+    void draw() const override;
+    GLfloat getX() const {return x;}
+    GLfloat getY() const {return y;}
+private:
+    GLfloat radius,m,x,y;
+    Velocity v;
+    static constexpr float m_setting[2] = {1,2};
+    static constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
+    static constexpr GLfloat radius_setting[2] = {0.01,0.03};
+};
+class Arrow : public Primitive{
+public:
+    Arrow(const std::vector<Vertex>& arrowVertex):
+    Primitive(arrowVertex,GL_LINES,ShaderBucket["arrow"].get()){}
+    void draw() const override;
+private:
+};
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+void cursorCallback(GLFWwindow* window, double xpos, double ypos);
+void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize);
+extern std::vector<std::unique_ptr<Ball>> balls;
+extern std::unique_ptr<Arrow> arrow;
 }
 #endif /* component_hpp */
