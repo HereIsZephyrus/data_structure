@@ -89,7 +89,6 @@ Primitive::Primitive(const std::vector<Vertex>& inputVertex,GLenum shp,Shader* i
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
     glEnableVertexAttribArray(0);
-
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)(sizeof(GLfloat) * 3));
     glEnableVertexAttribArray(1);
 
@@ -110,7 +109,6 @@ Primitive::Primitive(const Vertex& inputVertex,GLenum shp,Shader* inputshader){
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
     glEnableVertexAttribArray(0);
-
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)(sizeof(GLfloat) * 3));
     glEnableVertexAttribArray(1);
 

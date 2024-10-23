@@ -95,13 +95,23 @@ int binarytree_main(){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
-    Scatter(balls,0.2f);
+    Scatter(balls,72);
+    glfwSwapInterval(2);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        for (std::vector<std::unique_ptr<Ball>>::const_iterator it = balls.begin(); it != balls.end(); it++)
-            (*it)->draw();
+        for (size_t i = 0; i < balls.size(); i++){
+            balls[i]->draw();
+            balls[i]->move();
+        }
+        for (size_t i = 0; i < balls.size(); i++)
+            for (size_t j = i+1; j < balls.size(); j++){
+                if (isColliding(balls[i].get(),balls[j].get())){
+                    balls[i]->collideWith(balls[j].get());
+                    balls[j]->collideWith(balls[i].get());
+                }
+            }
         if (arrow != nullptr)
             arrow->draw();
         glfwSwapBuffers(window);

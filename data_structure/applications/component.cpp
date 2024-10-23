@@ -315,6 +315,45 @@ void Ball::draw() const{
     glDrawArrays(shape, 0, 1);
     glBindVertexArray(0);
 }
+void Ball::move(){
+    constexpr float timeRatio = 0.01;
+    constexpr float fuss = 0.99;
+    vertices[0] += timeRatio * v.vx;
+    vertices[1] += timeRatio * v.vy;
+    const GLfloat lowbound = -1 + radius, upBound = 1 - radius;
+    if (vertices[0] < lowbound){vertices[0] = lowbound*2 - vertices[0];v.vx = - v.vx;}
+    if (vertices[1] < lowbound){vertices[1] = lowbound*2 - vertices[1];v.vy = - v.vy;}
+    if (vertices[0] > upBound){vertices[0] = upBound*2 - vertices[0];v.vx = - v.vx;}
+    if (vertices[1] > upBound){vertices[1] = upBound*2 - vertices[1];v.vy = - v.vy;}
+    //v.vx *= fuss; v.vy *= fuss;
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum * 6, vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)(sizeof(GLfloat) * 3));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+void Ball::collideWith(const Ball* rhs){
+    constexpr float coefficientOfRestitution = 1.0f;
+    const GLfloat dx = vertices[0] - rhs->getX(),dy = vertices[1] - rhs->getY();
+    const GLfloat distance = std::sqrt(dx * dx + dy * dy);
+    const GLfloat nx = dx / distance,ny = dy / distance;
+    const GLfloat relativeVelocityX = rhs->getV().vx - v.vx;
+    const GLfloat relativeVelocityY = rhs->getV().vy - v.vy;
+    const GLfloat velocityAlongNormal = relativeVelocityX * nx + relativeVelocityY * ny;
+    if (velocityAlongNormal > 0) return;
+    const float impulse = -(1 + coefficientOfRestitution) * velocityAlongNormal;
+    v.vx += impulse * nx;
+    v.vy += impulse * ny;
+    float overlap = radius + rhs->getR() - distance;
+    vertices[0] -= nx * overlap * 0.5f;
+    vertices[1] -= ny * overlap * 0.5f;
+}
 void Arrow::draw() const{
     shader ->use();
     GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
@@ -351,10 +390,35 @@ void InitResource(GLFWwindow *& window){
         line->linkProgram();
         ShaderBucket["line"] = std::move(line);
     }
+    srand((unsigned int)time(0));
 }
 void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize){
+    /*
+    WindowParas& windowPara = WindowParas::getInstance();
+    const GLfloat xgrid = gridsize / windowPara.WINDOW_WIDTH,ygrid = gridsize / windowPara.WINDOW_HEIGHT;
+    for (GLfloat i = -1 + xgrid; i < 1.0f - xgrid; i += xgrid)
+        for (GLfloat j = - 1 + ygrid; j < 1.0f - ygrid; j += ygrid){
+            const GLfloat randX = i + (rand()%100)/100 * xgrid,randY = j + (rand()%100)/100 * ygrid;
+            if (i <= 0 && i + xgrid > 0 && j <=0 && j + ygrid > 0){
+                balls.push_back(std::make_unique<Ball>(glm::vec3(randX,randY,0),BallType::power));
+                Recorder::getRecord().powerLocation = balls.size()-1;
+            }
+            else
+                balls.push_back(std::make_unique<Ball>(glm::vec3(randX,randY,0),BallType::normal));
+        }
+*/
     balls.push_back(std::make_unique<Ball>(glm::vec3(0,0,0),BallType::power));
     Recorder::getRecord().powerLocation = 0;
+    balls.push_back(std::make_unique<Ball>(glm::vec3(0.4,0.4,0),BallType::normal));
+    balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
+}
+bool isColliding(const Ball* a,const Ball* b){
+    constexpr GLfloat bias = 0.001;
+    const GLfloat dx = a->getX() - b->getX(),dy = a->getY() - b->getY();
+    const GLfloat r = a->getR() + b->getR() + bias;
+    if (dx * dx + dy * dy <= r)
+        return true;
+    return false;
 }
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -372,16 +436,17 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods){
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && recorder.stretching){
         recorder.stretching = false;
         recorder.startmoving = true;
+        balls[recorder.powerLocation]->setV(arrow->getV());
         arrow = nullptr;
     }
 }
 void cursorCallback(GLFWwindow* window, double xpos, double ypos){
-    Recorder& record = Recorder::getRecord();
-    if ( record.stretching){
+    Recorder& recorder = Recorder::getRecord();
+    if ( recorder.stretching){
         WindowParas& windowPara = WindowParas::getInstance();
         const glm::vec3 strechEndLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
-        const glm::vec3 delta = strechEndLoc - record.strechStartLoc;
-        const int powerInd = record.powerLocation;
+        const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc;
+        const int powerInd = recorder.powerLocation;
         const glm::vec3 powerloc = glm::vec3(balls[powerInd]->getX(),balls[powerInd]->getY(),0.0);
         std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
         std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
@@ -389,7 +454,7 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
         if (arrow != nullptr)
             arrow = nullptr;
         std::vector<Vertex> arrowVert = {Vertex(powerloc,arrowColor),Vertex(delta,arrowColor)};
-        arrow = std::make_unique<Arrow>(arrowVert);
+        arrow = std::make_unique<Arrow>(arrowVert,Velocity(delta.x,delta.y));
     }
 }
 }

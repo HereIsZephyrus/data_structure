@@ -90,9 +90,10 @@ enum BallType{
     power = 1
 };
 struct Velocity{
-    float value;
-    float direction;
-    Velocity(float v,float d){value = v; direction = d;}
+    GLfloat vx;
+    GLfloat vy;
+    Velocity(GLfloat x,GLfloat y){vx = x; vy = y;}
+    Velocity(const Velocity& v){vx = v.vx; vy = v.vy;}
 };
 class Recorder{
 public:
@@ -116,12 +117,17 @@ class Ball : public Primitive{
 public:
     Ball(const glm::vec3& loc,BallType type):
     Primitive(Vertex(loc,color_setting[type]),GL_POINT,ShaderBucket["ball"].get()),
-    radius(radius_setting[type]),m(m_setting[type]),v(Velocity(0, 0)),x(loc.x),y(loc.y){}
+    radius(radius_setting[type]),m(m_setting[type]),v(Velocity(0, 0)){}
     void draw() const override;
-    GLfloat getX() const {return x;}
-    GLfloat getY() const {return y;}
+    GLfloat getX() const {return vertices[0];}
+    GLfloat getY() const {return vertices[1];}
+    GLfloat getR() const {return radius;}
+    Velocity getV() const {return v;}
+    void move();
+    void setV(Velocity newV) {v = newV;}
+    void collideWith(const Ball* rhs);
 private:
-    GLfloat radius,m,x,y;
+    GLfloat radius,m;
     Velocity v;
     static constexpr float m_setting[2] = {1,2};
     static constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
@@ -129,15 +135,18 @@ private:
 };
 class Arrow : public Primitive{
 public:
-    Arrow(const std::vector<Vertex>& arrowVertex):
-    Primitive(arrowVertex,GL_LINES,ShaderBucket["arrow"].get()){}
+    Arrow(const std::vector<Vertex>& arrowVertex, Velocity v):
+    Primitive(arrowVertex,GL_LINES,ShaderBucket["arrow"].get()),arrowV(v){}
     void draw() const override;
+    Velocity getV() const {return arrowV;}
 private:
+    Velocity arrowV;
 };
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
 void Scatter(std::vector<std::unique_ptr<Ball>>& balls,const GLfloat gridsize);
+bool isColliding(const Ball* a,const Ball* b);
 extern std::vector<std::unique_ptr<Ball>> balls;
 extern std::unique_ptr<Arrow> arrow;
 }
