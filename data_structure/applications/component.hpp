@@ -141,7 +141,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
 constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
-constexpr GLfloat radius_setting[2] = {0.01,0.03};
+constexpr GLfloat radius_setting[2] = {0.005,0.01};
 constexpr GLfloat m_setting[2] = {1,100};
 class BallPara{
     using node = tcb::QuadTreeNode<size_t>;

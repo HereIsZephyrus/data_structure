@@ -354,7 +354,8 @@ bool BallPara::move(){
                     break;
                 ++it;
             }
-            points.erase(it);
+            if (it != points.end())
+                points.erase(it);
             return true;
         }
     }

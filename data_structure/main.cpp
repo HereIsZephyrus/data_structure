@@ -97,19 +97,24 @@ int binarytree_main(bool useSpatialIndex){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
-    Scatter(balls,36);
-    std::shared_ptr<IndexTree> indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),5);
+    Scatter(balls,12);
+    std::shared_ptr<IndexTree> indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),10);
     BuildIndexTree(indexTree);
+    double rebuildingTime = glfwGetTime();
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (glfwGetTime() - rebuildingTime > 0.5){
+            indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),10);
+           BuildIndexTree(indexTree);
+        }
         if (Recorder::getRecord().startmoving){
             powerBall->move();
             for (size_t i = 0; i < balls.size(); i++){
                 if (balls[i]->move())
-                    indexTree->insert(balls[i]->getX(), balls[i]->getY(), i);
+                    balls[i]->indexReference = indexTree->insert(balls[i]->getX(), balls[i]->getY(), i);
             }
             if (useSpatialIndex)
                 SpatialIndexCollideSeach(indexTree);
