@@ -39,7 +39,7 @@ int main(int argc, char **argv){
         maze_main();
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
-        binarytree_main(true);
+        binarytree_main(false);
     }
     return 0;
 }
@@ -97,7 +97,7 @@ int binarytree_main(bool useSpatialIndex){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
-    Scatter(balls,12);
+    Scatter(balls,36);
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
