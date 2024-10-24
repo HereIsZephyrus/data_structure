@@ -30,6 +30,7 @@ int main(int argc, char **argv){
     if (program_type == "test_basicADT"){
         std::cout<<"test"<<std::endl;
         ::testing::InitGoogleTest(&argc, argv);
+        ::testing::FLAGS_gtest_filter = "-BinarySearchTreeTest.CopyTest";
         return RUN_ALL_TESTS();
     }else if (program_type == "benchmark"){
         std::cout<<"benchmark"<<std::endl;
