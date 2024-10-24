@@ -324,6 +324,18 @@ void Ball::draw() const{
     glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
     glBindVertexArray(0);
 }
+void Ball::draw(double timetic){
+    Shader *tempShader = ShaderBucket["ball_slide"].get();
+    tempShader->use();
+    GLuint radiusLoc = glGetUniformLocation(tempShader->program, "radius");
+    GLuint transparentLoc = glGetUniformLocation(tempShader->program, "transparent_time");
+    glUniform1f(radiusLoc,radius);
+    //std::cout<<timetic<<std::endl;
+    glUniform1f(transparentLoc,timetic);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
 void Ball::update(){
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -404,6 +416,14 @@ void InitResource(GLFWwindow *& window){
         ShaderBucket["ball"] = std::move(ball);
     }
     {
+        pShader ball_slide (new Shader());
+        ball_slide->attchShader(filePath("ball_slide.vs"),GL_VERTEX_SHADER);
+        ball_slide->attchShader(filePath("binarytree_ball_slide.gs"),GL_GEOMETRY_SHADER);
+        ball_slide->attchShader(filePath("ball_slide.frag"),GL_FRAGMENT_SHADER);
+        ball_slide->linkProgram();
+        ShaderBucket["ball_slide"] = std::move(ball_slide);
+    }
+    {
         pShader arrow (new Shader());
         arrow->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
         arrow->attchShader(filePath("binarytree_arrow.gs"),GL_GEOMETRY_SHADER);
@@ -422,6 +442,10 @@ void InitResource(GLFWwindow *& window){
     srand((unsigned int)time(0));
 }
 void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsize){
+    if (ballVertices!=nullptr)  ballVertices = nullptr;
+    if (powerVertices!=nullptr) powerVertices = nullptr;
+    if (!balls.empty()) balls.clear();
+    if (powerBall != nullptr) powerBall = nullptr;
     WindowParas& windowPara = WindowParas::getInstance();
     const GLfloat xgrid = gridsize / windowPara.WINDOW_WIDTH,ygrid = gridsize / windowPara.WINDOW_HEIGHT;
     std::vector<Vertex> normalVert;
@@ -544,22 +568,43 @@ void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree,unsigned long
 void DrawGUI(unsigned long long counter){
     using namespace ImGui;
     using std::string;
+    Recorder& recorder = Recorder::getRecord();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     NewFrame();
     Begin("panel");
     SetWindowPos("panel", ImVec2(0, 0));
-    SetWindowSize("panel", ImVec2(200, 100));
+    SetWindowSize("panel", ImVec2(200, 120));
     string countStr = "collide count:"+std::to_string(counter);
     Text("%s",countStr.c_str());
-    Recorder& recorder = Recorder::getRecord();
+    string sizeStr = "grid size:"+std::to_string(recorder.gridsize);
+    Text("%s",sizeStr.c_str());
+    SameLine();
+    if (Button("+")){
+        recorder.gridsize = std::min(recorder.gridsize + 6,(GLuint)54);
+        if (!recorder.startmoving){
+            recorder.toRestart = true;
+            recorder.restartTime = glfwGetTime();
+        }
+    }
+    SameLine();
+    if (Button("-")){
+        recorder.gridsize = std::max(recorder.gridsize - 6,(GLuint)12);
+        if (!recorder.startmoving){
+            recorder.toRestart = true;
+            recorder.restartTime = glfwGetTime();
+        }
+    }
     string buttonStr;
     if (recorder.useSpatialIndex)
         buttonStr = "quadtree spatial index";
     else
         buttonStr = "no spatial index";
-    if (Button(buttonStr.c_str())){
+    if (Button(buttonStr.c_str()))
         recorder.useSpatialIndex = !recorder.useSpatialIndex;
+    if (recorder.startmoving && Button("restart")){
+        recorder.toRestart = true;
+        recorder.restartTime = glfwGetTime();
     }
     End();
 }

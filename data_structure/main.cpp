@@ -98,23 +98,35 @@ int binarytree_main(){
     using namespace binarytree;
     using tcb::SpatialRange;
     GLFWwindow *& window = WindowParas::getInstance().window;
+    Recorder& recorder = Recorder::getRecord();
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
     initImGUI(window);
-    Scatter(balls,12);
+    Scatter(balls,recorder.gridsize);
     std::shared_ptr<IndexTree> indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),10);
     BuildIndexTree(indexTree);
-    double rebuildingTime = glfwGetTime();
+    double rebuildingTime = glfwGetTime(),startTIme = glfwGetTime();
     unsigned long long counter = 0;
-    glfwSwapInterval(1);
+    //glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
+        if (recorder.toRestart && glfwGetTime() - recorder.restartTime > 1){
+            Scatter(balls,recorder.gridsize);
+            recorder.toRestart = false;
+            indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),10);
+            BuildIndexTree(indexTree);
+            rebuildingTime = glfwGetTime();
+            startTIme = glfwGetTime();
+            recorder.stretching = false;
+            recorder.startmoving = false;
+        }
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (glfwGetTime() - rebuildingTime > 0.5){
+        if (glfwGetTime() - rebuildingTime > 0.2){
             indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),10);
            BuildIndexTree(indexTree);
+            rebuildingTime = glfwGetTime();
         }
         if (Recorder::getRecord().startmoving){
             powerBall->move();
@@ -129,8 +141,18 @@ int binarytree_main(){
         }
         ballVertices->update();
         powerVertices->update();
-        ballVertices->draw();
-        powerVertices->draw();
+        double timeticShowUp = glfwGetTime() - startTIme;
+        double timeticPopout = glfwGetTime() - recorder.restartTime;
+        if (timeticShowUp < 1){
+            ballVertices->draw(timeticShowUp);
+            powerVertices->draw(timeticShowUp);
+        }else if (timeticPopout < 1){
+            ballVertices->draw(1 - timeticPopout);
+            powerVertices->draw(1 - timeticPopout);
+        }else{
+            ballVertices->draw();
+            powerVertices->draw();
+        }
         DrawGUI(counter);
         if (arrow != nullptr)
             arrow->draw();

@@ -104,13 +104,17 @@ public:
     }
     Recorder(const Recorder&) = delete;
     void operator=(const Recorder&) = delete;
-    bool stretching,startmoving,useSpatialIndex;
+    bool stretching,startmoving,useSpatialIndex,toRestart;
+    double restartTime;
+    GLuint gridsize;
     glm::vec3 strechStartLoc;
 private:
     Recorder(){
         stretching = false;
         startmoving = false;
         useSpatialIndex = true;
+        toRestart = false;
+        gridsize = 18;
     }
 };
 class Ball : public Primitive{
@@ -120,6 +124,7 @@ public:
     Ball(const Vertex ballVertex,GLfloat r,glm::vec3 c):
     Primitive(ballVertex,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){}
     void draw() const override;
+    void draw(double timetic);
     void update();
     GLfloat& getX(GLuint num){return vertices[num * 6];}
     GLfloat& getY(GLuint num){return vertices[num * 6 + 1];}
