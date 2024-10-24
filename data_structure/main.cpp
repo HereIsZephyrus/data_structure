@@ -35,6 +35,8 @@ int main(int argc, char **argv){
         ::testing::FLAGS_gtest_filter = "-BinarySearchTreeTest.CopyTest";
         return RUN_ALL_TESTS();
     }else if (program_type == "benchmark"){
+        ::benchmark::Initialize(&argc, argv);
+        ::benchmark::RunSpecifiedBenchmarks();
         std::cout<<"benchmark"<<std::endl;
     }else if (program_type == "maze"){
         std::cout<<"maze"<<std::endl;

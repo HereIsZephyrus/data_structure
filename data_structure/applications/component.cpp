@@ -452,7 +452,7 @@ void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsiz
     Vertex powerVert;
     for (GLfloat i = -1.0 + xgrid; i < 1.0f - xgrid; i += xgrid)
         for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
-            const GLfloat randX = i + (30 + rand()%50)/100 * xgrid,randY = j + (30 + rand()%50)/100 * ygrid;
+            const GLfloat randX = i + xgrid * (30 + rand()%50)/100,randY = j + ygrid * (30 + rand()%50)/100;
             const glm::vec3 location = glm::vec3(randX,randY,0);
             if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0)
                 powerVert = Vertex(location,color_setting[BallType::power]);
