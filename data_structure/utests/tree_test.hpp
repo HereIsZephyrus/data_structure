@@ -28,4 +28,13 @@ protected:
         bst.insert(18);
     }
 };
+class QuadTreeTest : public ::testing::Test {
+protected:
+    QuadTree<int> qt;
+
+    void SetUp() override {
+        qt = QuadTree<int>(SpatialRange(0.0f, 0.0f, 100.0f, 100.0f), 4);
+    }
+
+};
 #endif /* tree_test_hpp */

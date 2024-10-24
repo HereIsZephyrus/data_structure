@@ -37,7 +37,6 @@ protected:
     Vector<Object> vec;
     VectorTest(){}
     void SetUp() override {}
-    void TearDown() override {}
 };
 using IntVectorTest = VectorTest<int>;
 
@@ -47,7 +46,6 @@ protected:
     List<Object> list;
     ListTest(){}
     void SetUp() override {}
-    void TearDown() override {}
 };
 using IntListTest = ListTest<int>;
 #endif /* linear_test_hpp */
