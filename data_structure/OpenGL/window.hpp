@@ -18,6 +18,7 @@
 
 inline bool HAS_INIT_OPENGL_CONTEXT = false;
 int initOpenGL(GLFWwindow *&window,std::string windowName);
+int initImGUI(GLFWwindow* window);
 class WindowParas{
 public:
     static WindowParas& getInstance(){

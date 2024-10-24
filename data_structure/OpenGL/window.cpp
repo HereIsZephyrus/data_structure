@@ -11,8 +11,9 @@
 #include <string>
 #include <algorithm>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include "window.hpp"
 #include "graphing.hpp"
 
@@ -67,4 +68,15 @@ int initOpenGL(GLFWwindow *&window,std::string windowName) {
     std::cout<<version<<std::endl;
     HAS_INIT_OPENGL_CONTEXT = true;
     return 0;
+}
+int initImGUI(GLFWwindow *window) {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 410");
+    return  0;
 }

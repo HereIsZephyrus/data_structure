@@ -17,9 +17,12 @@
 #include "OpenGL/graphing.hpp"
 #include "OpenGL/window.hpp"
 #include "applications/component.hpp"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 int maze_main();
-int binarytree_main(bool useSpatialIndex);
+int binarytree_main();
 int main(int argc, char **argv){
     if (argc == 1){
         ::testing::InitGoogleTest(&argc, argv);
@@ -38,7 +41,7 @@ int main(int argc, char **argv){
         maze_main();
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
-        binarytree_main(true);
+        binarytree_main();
     }
     return 0;
 }
@@ -49,6 +52,7 @@ int maze_main(){
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-迷宫") != 0)
         return -1;
     InitResource(window);
+    initImGUI(window);
     Map map;
     map.generate();
     Boundary* boundary = new Boundary(map.getBoundaryVert());
@@ -90,17 +94,19 @@ int maze_main(){
     return 0;
 }
 
-int binarytree_main(bool useSpatialIndex){
+int binarytree_main(){
     using namespace binarytree;
     using tcb::SpatialRange;
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
+    initImGUI(window);
     Scatter(balls,12);
     std::shared_ptr<IndexTree> indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),10);
     BuildIndexTree(indexTree);
     double rebuildingTime = glfwGetTime();
+    unsigned long long counter = 0;
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -116,17 +122,20 @@ int binarytree_main(bool useSpatialIndex){
                 if (balls[i]->move())
                     balls[i]->indexReference = indexTree->insert(balls[i]->getX(), balls[i]->getY(), i);
             }
-            if (useSpatialIndex)
-                SpatialIndexCollideSeach(indexTree);
+            if (Recorder::getRecord().useSpatialIndex)
+                SpatialIndexCollideSeach(indexTree,counter);
             else
-                BasicCollideSearch();
+                BasicCollideSearch(counter);
         }
         ballVertices->update();
         powerVertices->update();
         ballVertices->draw();
         powerVertices->draw();
+        DrawGUI(counter);
         if (arrow != nullptr)
             arrow->draw();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
     glfwDestroyWindow(window);

@@ -11,12 +11,17 @@
 #include <ctime>
 #include <cmath>
 #include <memory>
+#include <cstring>
+#include <string>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "../OpenGL/graphing.hpp"
 #include "../OpenGL/window.hpp"
 #include "../ADT/tree.hpp"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 namespace maze{
 void Map::generate(){
     srand((unsigned int)time(0));
@@ -466,6 +471,10 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods){
         recorder.strechStartLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
     }
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE && recorder.stretching){
+        if (arrow == nullptr){
+            recorder.stretching = false;
+            return;
+        }
         recorder.stretching = false;
         recorder.startmoving = true;
         powerBall->setV(arrow->getV());
@@ -479,6 +488,8 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
         const glm::vec3 strechEndLoc = glm::vec3(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos),0.0);
         const glm::vec3 powerloc = glm::vec3(powerBall->getX(),powerBall->getY(),0.0);
         const glm::vec3 delta = strechEndLoc - recorder.strechStartLoc;
+        if (std::abs(delta.x) + std::abs(delta.y) < 0.3) // filter click
+            return;
         //std::cout<<"start:"<<powerloc.x<<' '<<powerloc.y<<std::endl;
         //std::cout<<"end:"<<delta.x<<' '<<delta.y<<std::endl;
         const glm::vec3 arrowColor = glm::vec3(1.0,0.0,1.0);
@@ -488,14 +499,17 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
         arrow = std::make_unique<Arrow>(arrowVert,Velocity(delta.x,delta.y));
     }
 }
-void BasicCollideSearch(){
+void BasicCollideSearch(unsigned long long& counter){
     for (size_t i = 0; i < balls.size(); i++)
-        if (isColliding(powerBall.get(),balls[i].get()))
+        if (isColliding(powerBall.get(),balls[i].get())){
             powerBall->collideWith(balls[i].get());
+            ++counter;
+        }
     for (size_t i = 0; i < balls.size(); i++)
         for (size_t j = 0; j < balls.size(); j++)
             if (i != j && isColliding(balls[i].get(),balls[j].get())){
                 balls[i]->collideWith(balls[j].get());
+                ++counter;
                 break;
             }
 }
@@ -505,12 +519,14 @@ void BuildIndexTree(std::shared_ptr<IndexTree> indexTree){
         balls[i]->indexReference = indexTree->insert(x, y, i);
     }
 }
-void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree){
+void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree,unsigned long long& counter){
     using tcb::SpatialRange;
     using locs =std::vector<size_t>;
     for (size_t i = 0; i < balls.size(); i++)
-        if (isColliding(powerBall.get(),balls[i].get()))
+        if (isColliding(powerBall.get(),balls[i].get())){
             powerBall->collideWith(balls[i].get());
+            ++counter;
+        }
     for (size_t i = 0; i < balls.size(); i++){
         const GLfloat x = balls[i]->getX(), y = balls[i]->getY(),r = balls[i]->getR() * 2;
         const GLfloat minx = std::max(-1.0f,x-r), miny = std::max(-1.0f,y-r);
@@ -518,9 +534,33 @@ void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree){
         SpatialRange range(minx, miny,maxx - minx, maxy - miny);
         locs neibors = indexTree->queryRange(range);
         for (locs::const_iterator it = neibors.begin(); it != neibors.end(); it++){
-            if ((*it != i) &&isColliding(balls[*it].get(),balls[i].get()))
+            if ((*it != i) &&isColliding(balls[*it].get(),balls[i].get())){
                 balls[i]->collideWith(balls[*it].get());
+                ++counter;
+            }
         }
     }
+}
+void DrawGUI(unsigned long long counter){
+    using namespace ImGui;
+    using std::string;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    NewFrame();
+    Begin("panel");
+    SetWindowPos("panel", ImVec2(0, 0));
+    SetWindowSize("panel", ImVec2(200, 100));
+    string countStr = "collide count:"+std::to_string(counter);
+    Text("%s",countStr.c_str());
+    Recorder& recorder = Recorder::getRecord();
+    string buttonStr;
+    if (recorder.useSpatialIndex)
+        buttonStr = "quadtree spatial index";
+    else
+        buttonStr = "no spatial index";
+    if (Button(buttonStr.c_str())){
+        recorder.useSpatialIndex = !recorder.useSpatialIndex;
+    }
+    End();
 }
 }

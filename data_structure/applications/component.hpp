@@ -104,12 +104,13 @@ public:
     }
     Recorder(const Recorder&) = delete;
     void operator=(const Recorder&) = delete;
-    bool stretching,startmoving;
+    bool stretching,startmoving,useSpatialIndex;
     glm::vec3 strechStartLoc;
 private:
     Recorder(){
         stretching = false;
         startmoving = false;
+        useSpatialIndex = true;
     }
 };
 class Ball : public Primitive{
@@ -171,8 +172,9 @@ extern std::vector<std::unique_ptr<BallPara>> balls;
 extern std::unique_ptr<BallPara> powerBall;
 void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsize);
 bool isColliding(const BallPara* a,const BallPara* b);
-void BasicCollideSearch();
-void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree);
+void BasicCollideSearch(unsigned long long& counter);
+void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree,unsigned long long& counter);
 void BuildIndexTree(std::shared_ptr<IndexTree> indexTree);
+void DrawGUI(unsigned long long counter);
 }
 #endif /* component_hpp */
