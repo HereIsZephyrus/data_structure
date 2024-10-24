@@ -141,22 +141,20 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void mouseCallback(GLFWwindow* window, int button, int action, int mods);
 void cursorCallback(GLFWwindow* window, double xpos, double ypos);
 constexpr glm::vec3 color_setting[2] = {glm::vec3(1.0,1.0,1.0),glm::vec3(1.0,0.0,0.0)};
-constexpr GLfloat radius_setting[2] = {0.01,0.03};
+constexpr GLfloat radius_setting[2] = {0.005,0.01};
 constexpr GLfloat m_setting[2] = {1,100};
 class BallPara{
-    using node = tcb::QuadTreeNode<size_t>;
 public:
     BallPara(GLfloat& xloc, GLfloat& yloc,BallType type):
-    radius(radius_setting[type]),mass(m_setting[type]),v(Velocity(0, 0)),x(xloc),y(yloc){indexReference = nullptr;}
+    radius(radius_setting[type]),mass(m_setting[type]),v(Velocity(0, 0)),x(xloc),y(yloc){}
     GLfloat getX() const {return x;}
     GLfloat getY() const {return y;}
     GLfloat getR() const {return radius;}
     Velocity getV() const {return v;}
     GLfloat getM() const {return mass;}
-    bool move();
+    void move();
     void setV(Velocity newV) {v = newV;}
     void collideWith(BallPara* rhs);
-    node* indexReference;
 private:
     GLfloat radius,mass;
     GLfloat &x,&y;
@@ -172,7 +170,6 @@ extern std::unique_ptr<BallPara> powerBall;
 void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsize);
 bool isColliding(const BallPara* a,const BallPara* b);
 void BasicCollideSearch();
-void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree);
-void BuildIndexTree(std::shared_ptr<IndexTree> indexTree);
+void SpatialIndexSeach();
 }
 #endif /* component_hpp */

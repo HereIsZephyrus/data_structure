@@ -316,7 +316,7 @@ void Ball::draw() const{
     glUniform1f(radiusLoc,radius);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
-    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glDrawArrays(shape, 0, vertexNum);
     glBindVertexArray(0);
 }
 void Ball::update(){
@@ -332,33 +332,16 @@ void Ball::update(){
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-bool BallPara::move(){
-    const GLfloat rawX = x, rawY = y;
+void BallPara::move(){
     x += timeRatio * v.vx;
     y += timeRatio * v.vy;
+    //std::cout<<v.vy<<std::endl;
     const GLfloat lowbound = -1 + radius, upBound = 1 - radius;
     if (x < lowbound){x = lowbound*2 - x;v.vx = - v.vx * coefficientOfRestitution;}
     if (y < lowbound){y = lowbound*2 - y;v.vy = - v.vy * coefficientOfRestitution;}
     if (x > upBound){x = upBound*2 - x;v.vx = - v.vx * coefficientOfRestitution;}
     if (y > upBound){y = upBound*2 - y;v.vy = - v.vy * coefficientOfRestitution;}
     v.vx *= fuss; v.vy *= fuss;
-    if (indexReference != nullptr){
-        const tcb::SpatialRange& range = indexReference->range;
-        bool transfer = !(x >= range.minx && x < range.minx + range.width && y >= range.miny && y < range.miny + range.height);
-        if (transfer){
-            using locs =std::vector<tcb::Point<size_t>>;
-            locs& points = indexReference->points;
-            locs::const_iterator it = points.begin();
-            while (it != points.end()){
-                if (it->x == rawX && it->y == rawY)
-                    break;
-                ++it;
-            }
-            points.erase(it);
-            return true;
-        }
-    }
-    return false;
 }
 void BallPara::collideWith(BallPara* rhs){
     const GLfloat dx = (rhs->getX() - x) * 0.75,dy =  rhs->getY() - y;
@@ -442,6 +425,10 @@ void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsiz
                 ++counter;
             }
         }
+    //balls.push_back(std::make_unique<Ball>(glm::vec3(0,0,0),BallType::power));
+    //Recorder::getRecord().powerLocation = 0;
+    //balls.push_back(std::make_unique<Ball>(glm::vec3(0.4,0.4,0),BallType::normal));
+    //balls.push_back(std::make_unique<Ball>(glm::vec3(0.1,0.3,0),BallType::normal));
 }
 bool isColliding(const BallPara* a,const BallPara* b){
     constexpr GLfloat bias = radius_setting[BallType::normal] / 100;
@@ -498,15 +485,14 @@ void BasicCollideSearch(){
                 break;
             }
 }
-void BuildIndexTree(std::shared_ptr<IndexTree> indexTree){
+void SpatialIndexSeach(){
+    using locs =std::vector<size_t>;
+    using namespace tcb;
+    IndexTree indexTree(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),5);
     for (size_t i = 0; i < balls.size(); i++){
         const GLfloat x = balls[i]->getX(), y = balls[i]->getY();
-        balls[i]->indexReference = indexTree->insert(x, y, i);
+        indexTree.insert(x, y, i);
     }
-}
-void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree){
-    using tcb::SpatialRange;
-    using locs =std::vector<size_t>;
     for (size_t i = 0; i < balls.size(); i++)
         if (isColliding(powerBall.get(),balls[i].get()))
             powerBall->collideWith(balls[i].get());
@@ -515,7 +501,7 @@ void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree){
         const GLfloat minx = std::max(-1.0f,x-r), miny = std::max(-1.0f,y-r);
         const GLfloat maxx = std::min(1.0f,x+r), maxy = std::min(1.0f,y+r);
         SpatialRange range(minx, miny,maxx - minx, maxy - miny);
-        locs neibors = indexTree->queryRange(range);
+        locs neibors = indexTree.queryRange(range);
         for (locs::const_iterator it = neibors.begin(); it != neibors.end(); it++){
             if ((*it != i) &&isColliding(balls[*it].get(),balls[i].get()))
                 balls[i]->collideWith(balls[*it].get());
