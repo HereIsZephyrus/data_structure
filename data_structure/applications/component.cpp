@@ -16,6 +16,7 @@
 #include <GLFW/glfw3.h>
 #include "../OpenGL/graphing.hpp"
 #include "../OpenGL/window.hpp"
+#include "../ADT/tree.hpp"
 namespace maze{
 void Map::generate(){
     srand((unsigned int)time(0));
@@ -471,6 +472,40 @@ void cursorCallback(GLFWwindow* window, double xpos, double ypos){
             arrow = nullptr;
         std::vector<Vertex> arrowVert = {Vertex(powerloc,arrowColor),Vertex(delta,arrowColor)};
         arrow = std::make_unique<Arrow>(arrowVert,Velocity(delta.x,delta.y));
+    }
+}
+void BasicCollideSearch(){
+    for (size_t i = 0; i < balls.size(); i++)
+        if (isColliding(powerBall.get(),balls[i].get()))
+            powerBall->collideWith(balls[i].get());
+    for (size_t i = 0; i < balls.size(); i++)
+        for (size_t j = 0; j < balls.size(); j++)
+            if (i != j && isColliding(balls[i].get(),balls[j].get())){
+                balls[i]->collideWith(balls[j].get());
+                break;
+            }
+}
+void SpatialIndexSeach(){
+    using locs =std::vector<size_t>;
+    using namespace tcb;
+    IndexTree indexTree(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),5);
+    for (size_t i = 0; i < balls.size(); i++){
+        const GLfloat x = balls[i]->getX(), y = balls[i]->getY();
+        indexTree.insert(x, y, i);
+    }
+    for (size_t i = 0; i < balls.size(); i++)
+        if (isColliding(powerBall.get(),balls[i].get()))
+            powerBall->collideWith(balls[i].get());
+    for (size_t i = 0; i < balls.size(); i++){
+        const GLfloat x = balls[i]->getX(), y = balls[i]->getY(),r = balls[i]->getR() * 2;
+        const GLfloat minx = std::max(-1.0f,x-r), miny = std::max(-1.0f,y-r);
+        const GLfloat maxx = std::min(1.0f,x+r), maxy = std::min(1.0f,y+r);
+        SpatialRange range(minx, miny,maxx - minx, maxy - miny);
+        locs neibors = indexTree.queryRange(range);
+        for (locs::const_iterator it = neibors.begin(); it != neibors.end(); it++){
+            if (isColliding(balls[*it].get(),balls[i].get()))
+                balls[i]->collideWith(balls[*it].get());
+        }
     }
 }
 }

@@ -20,7 +20,7 @@
 #include "applications/component.hpp"
 
 int maze_main();
-int binarytree_main();
+int binarytree_main(bool useSpatialIndex);
 int main(int argc, char **argv){
     if (argc == 1){
         ::testing::InitGoogleTest(&argc, argv);
@@ -39,7 +39,7 @@ int main(int argc, char **argv){
         maze_main();
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
-        binarytree_main();
+        binarytree_main(true);
     }
     return 0;
 }
@@ -91,7 +91,7 @@ int maze_main(){
     return 0;
 }
 
-int binarytree_main(){
+int binarytree_main(bool useSpatialIndex){
     using namespace binarytree;
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
@@ -108,16 +108,10 @@ int binarytree_main(){
             #pragma omp parallel for
             for (size_t i = 0; i < balls.size(); i++)
                 balls[i]->move();
-            for (size_t i = 0; i < balls.size(); i++)
-                if (isColliding(powerBall.get(),balls[i].get()))
-                    powerBall->collideWith(balls[i].get());
-            for (size_t i = 0; i < balls.size(); i++)
-                #pragma omp parallel for
-                for (size_t j = 0; j < balls.size(); j++)
-                    if (i != j && isColliding(balls[i].get(),balls[j].get())){
-                        balls[i]->collideWith(balls[j].get());
-                        break;
-                    }
+            if (useSpatialIndex)
+                SpatialIndexSeach();
+            else
+                BasicCollideSearch();
         }
         ballVertices->update();
         powerVertices->update();

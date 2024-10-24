@@ -62,7 +62,7 @@ struct QuadTreeNode{
     QuadTreeNode(SpatialRange r,int c,QuadTreeNode* ne = nullptr, QuadTreeNode* nw = nullptr,QuadTreeNode* se = nullptr, QuadTreeNode* sw = nullptr):
     range(r),capacity(c),northeast(ne),northwest(nw),southeast(se),southwest(sw){
         points.clear();
-        if (ne != nullptr ||& nw != nullptr || se != nullptr || sw != nullptr)
+        if (ne != nullptr || nw != nullptr || se != nullptr || sw != nullptr)
             isLeaf = false;
         else
             isLeaf = true;
@@ -83,9 +83,9 @@ public:
         return false;
     }
     virtual void clear() = 0;
-    virtual bool contains(const Object& x) const;
-    virtual void insert(const Object& x, NodeStructure* & node) const;
-    virtual void remove(const Object& x, NodeStructure* & node) const;
+    //virtual bool contains(const Object& x) const;
+    //virtual void insert(const Object& x, NodeStructure* & node) const;
+    //virtual void remove(const Object& x, NodeStructure* & node) const;
 };
 
 template <class Object>
@@ -104,7 +104,7 @@ public:
         return *this;
     }
     friend ostream& operator<<(ostream& os, const BST& tree);
-    bool contains(const Object& x) const override{return contains(x, this->root);}
+    bool contains(const Object& x) const{return contains(x, this->root);}
     void insert(const Object& x){insert(x, this->root);}
     void remove(const Object& x){remove(x, this->root);}
     void clear() {destroy(this->root);}
@@ -173,7 +173,7 @@ protected:
         return findMax(p->right);
     }
 private:
-    void insert(const Object& x, node* & p) const override{
+    void insert(const Object& x, node* & p) const{
         if ( p == nullptr)
             p  = new node(x, nullptr, nullptr);
         if (p->element == x)
@@ -183,7 +183,7 @@ private:
         else
             insert(x, p->right);
     }
-    void remove(const Object& x, node* & p) const override{
+    void remove(const Object& x, node* & p) const{
         if (p == nullptr)
             return;
         if (x < p->element)
@@ -233,23 +233,29 @@ public:
     }
     ~QuadTree(){clear();}
     void clear(){destroy(this->root);}
-    void insert(GLfloat x,GLfloat y,const Object& obj){insert(x,y,obj,this->root);};
+    bool insert(GLfloat x,GLfloat y,const Object& obj){return insert(x,y,obj,this->root);};
     std::vector<Object> queryRange(const SpatialRange& orientRange){return queryRange(orientRange,this->root);}
 private:
     void destroy(node* p){
         if (p != nullptr){
-            destroy(p->left);
-            destroy(p->right);
+            destroy(p->northeast);
+            destroy(p->northwest);
+            destroy(p->southeast);
+            destroy(p->southwest);
             delete p;
         }
     }
-    void subdivide() {
+    node* clone(node* rhst) const{
+        if (rhst == nullptr)
+            return nullptr;
+        return new node(rhst->range,rhst->capacity,clone(rhst->northeast),clone(rhst->northwest),clone(rhst->southeast),clone(rhst->southwest));
+    }
+    void subdivide(node *p) {
         SpatialRange& range = (this->root)->range;
-        node *p = this->root;
-        p->northeast = new node(range.minx + range.width / 2, range.miny, range.width / 2, range.height / 2, p->capacity);
-        p->northwest = new node(range.minx, range.miny, range.width / 2, range.height / 2, p->capacity);
-        p->southeast = new node(range.minx + range.width / 2, range.miny + range.height / 2, range.width / 2, range.height / 2, p->capacity);
-        p->southwest = new node(range.minx, range.miny + range.height / 2, range.width / 2, range.height / 2, p->capacity);
+        p->northeast = new node(SpatialRange(range.minx + range.width / 2, range.miny, range.width / 2, range.height / 2), p->capacity);
+        p->northwest = new node(SpatialRange(range.minx, range.miny, range.width / 2, range.height / 2), p->capacity);
+        p->southeast = new node(SpatialRange(range.minx + range.width / 2, range.miny + range.height / 2, range.width / 2, range.height / 2), p->capacity);
+        p->southwest = new node(SpatialRange(range.minx, range.miny + range.height / 2, range.width / 2, range.height / 2), p->capacity);
         p->isLeaf = false;
     }
     bool insert(GLfloat x,GLfloat y,const Object& obj,node *p){
@@ -260,11 +266,11 @@ private:
             p->points.push_back(Point(x,y,obj));
             return true;
         }
-        if (p->isLeaf)            subdivide();
-        if (insert(x,y,obj,p->northeastj)) return true;
-        if (insert(x,y,obj,p->northwestj)) return true;
-        if (insert(x,y,obj,p->southeastj)) return true;
-        if (insert(x,y,obj,p->southwestj)) return true;
+        if (p->isLeaf)            subdivide(p);
+        if (insert(x,y,obj,p->northeast)) return true;
+        if (insert(x,y,obj,p->northwest)) return true;
+        if (insert(x,y,obj,p->southeast)) return true;
+        if (insert(x,y,obj,p->southwest)) return true;
         return false;
     }
     std::vector<Object> queryRange(const SpatialRange& orientRange,node *p) {

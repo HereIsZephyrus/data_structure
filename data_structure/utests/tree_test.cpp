@@ -51,3 +51,18 @@ TEST_F(BinarySearchTreeTest, RemoveAndFindExtreme) {
     EXPECT_EQ(bst.findMax(),12);
     EXPECT_EQ(bst.findMin(),5);
 }
+TEST_F(QuadTreeTest, InsertAndQuery) {
+    EXPECT_TRUE(qt.insert(10, 10,1));
+    EXPECT_TRUE(qt.insert(20, 20,2));
+    EXPECT_TRUE(qt.insert(30, 30,3));
+    std::vector<int> res = qt.queryRange(SpatialRange(0, 0, 100, 100));
+    EXPECT_EQ(3, res.size());
+    for (int i = 0; i < res.size(); i ++)
+        EXPECT_EQ(i+1, res[i]);
+    res.clear();
+    EXPECT_TRUE(qt.insert(40, 40,3));
+    EXPECT_TRUE(qt.insert(50, 50,3));
+    EXPECT_TRUE(qt.insert(60, 60,3));
+    res  = qt.queryRange(SpatialRange(15, 15, 40, 40));
+    EXPECT_EQ(4, res.size());
+}

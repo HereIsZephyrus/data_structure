@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include "../OpenGL/graphing.hpp"
+#include "../ADT/tree.hpp"
 namespace maze{
 using std::vector;
 class Recorder{
@@ -163,9 +164,12 @@ private:
     static constexpr GLsizei stride = 6;
     static constexpr float coefficientOfRestitution = 1.0f;
 };
+typedef tcb::QuadTree<size_t>  IndexTree;
 extern std::vector<std::unique_ptr<BallPara>> balls;
 extern std::unique_ptr<BallPara> powerBall;
 void Scatter(std::vector<std::unique_ptr<BallPara>>& balls,const GLfloat gridsize);
 bool isColliding(const BallPara* a,const BallPara* b);
+void BasicCollideSearch();
+void SpatialIndexSeach();
 }
 #endif /* component_hpp */
