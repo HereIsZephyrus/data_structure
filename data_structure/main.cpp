@@ -14,7 +14,6 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <omp.h>
 #include "OpenGL/graphing.hpp"
 #include "OpenGL/window.hpp"
 #include "applications/component.hpp"
@@ -39,7 +38,7 @@ int main(int argc, char **argv){
         maze_main();
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
-        binarytree_main(false);
+        binarytree_main(true);
     }
     return 0;
 }
@@ -93,11 +92,14 @@ int maze_main(){
 
 int binarytree_main(bool useSpatialIndex){
     using namespace binarytree;
+    using tcb::SpatialRange;
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return -1;
     InitResource(window);
     Scatter(balls,36);
+    std::shared_ptr<IndexTree> indexTree = std::make_unique<IndexTree>(SpatialRange(-1.0f,-1.0f,2.0f,2.0f),5);
+    BuildIndexTree(indexTree);
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -105,11 +107,12 @@ int binarytree_main(bool useSpatialIndex){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if (Recorder::getRecord().startmoving){
             powerBall->move();
-            #pragma omp parallel for
-            for (size_t i = 0; i < balls.size(); i++)
-                balls[i]->move();
+            for (size_t i = 0; i < balls.size(); i++){
+                if (balls[i]->move())
+                    indexTree->insert(balls[i]->getX(), balls[i]->getY(), i);
+            }
             if (useSpatialIndex)
-                SpatialIndexSeach();
+                SpatialIndexCollideSeach(indexTree);
             else
                 BasicCollideSearch();
         }
