@@ -12,6 +12,7 @@
 #include <strstream>
 #include <exception>
 #include <vector>
+#include <map>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -221,6 +222,7 @@ ostream& operator<<(ostream& os,const BinarySearchTree<Object>& tree){return Bin
 template <class Object>
 class QuadTree : protected Tree<Object, QuadTreeNode<Object>>{
     using node = QuadTreeNode<Object>;
+    using insertRes = std::pair<bool,node*>;
 public:
     QuadTree(){this->root = nullptr;}
     QuadTree(const SpatialRange& r, int c){this->root = new node(r,c);}
@@ -233,7 +235,7 @@ public:
     }
     ~QuadTree(){clear();}
     void clear(){destroy(this->root);}
-    bool insert(GLfloat x,GLfloat y,const Object& obj){return insert(x,y,obj,this->root);};
+    node* insert(GLfloat x,GLfloat y,const Object& obj){return insert(x,y,obj,this->root).second;};
     std::vector<Object> queryRange(const SpatialRange& orientRange){return queryRange(orientRange,this->root);}
 private:
     void destroy(node* p){
@@ -251,27 +253,31 @@ private:
         return new node(rhst->range,rhst->capacity,clone(rhst->northeast),clone(rhst->northwest),clone(rhst->southeast),clone(rhst->southwest));
     }
     void subdivide(node *p) {
-        SpatialRange& range = (this->root)->range;
+        SpatialRange& range = p->range;
         p->northeast = new node(SpatialRange(range.minx + range.width / 2, range.miny, range.width / 2, range.height / 2), p->capacity);
         p->northwest = new node(SpatialRange(range.minx, range.miny, range.width / 2, range.height / 2), p->capacity);
         p->southeast = new node(SpatialRange(range.minx + range.width / 2, range.miny + range.height / 2, range.width / 2, range.height / 2), p->capacity);
         p->southwest = new node(SpatialRange(range.minx, range.miny + range.height / 2, range.width / 2, range.height / 2), p->capacity);
         p->isLeaf = false;
     }
-    bool insert(GLfloat x,GLfloat y,const Object& obj,node *p){
+    insertRes insert(GLfloat x,GLfloat y,const Object& obj,node *p){
         const SpatialRange& range = p->range;
         bool contain = (x >= range.minx && x < range.minx + range.width && y >= range.miny && y < range.miny + range.height);
-        if (!contain) return false;
+        if (!contain) return std::make_pair(false, nullptr);
         if (p->points.size() < p->capacity) {
             p->points.push_back(Point(x,y,obj));
-            return true;
+            return std::make_pair(true, p);
         }
         if (p->isLeaf)            subdivide(p);
-        if (insert(x,y,obj,p->northeast)) return true;
-        if (insert(x,y,obj,p->northwest)) return true;
-        if (insert(x,y,obj,p->southeast)) return true;
-        if (insert(x,y,obj,p->southwest)) return true;
-        return false;
+        insertRes ret_res = insert(x,y,obj,p->northeast);
+        if (ret_res.first) return ret_res;
+        ret_res = insert(x,y,obj,p->northwest);
+        if (ret_res.first) return ret_res;
+        ret_res = insert(x,y,obj,p->southeast);
+        if (ret_res.first) return ret_res;
+        ret_res = insert(x,y,obj,p->southwest);
+        if (ret_res.first) return ret_res;
+        return std::make_pair(false, nullptr);
     }
     std::vector<Object> queryRange(const SpatialRange& orientRange,node *p) {
         std::vector<Object> foundPoints;
