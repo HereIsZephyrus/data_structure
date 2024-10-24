@@ -39,7 +39,7 @@ int main(int argc, char **argv){
         maze_main();
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
-        binarytree_main(true);
+        binarytree_main(false);
     }
     return 0;
 }

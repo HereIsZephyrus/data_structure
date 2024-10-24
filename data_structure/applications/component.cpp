@@ -503,7 +503,7 @@ void SpatialIndexSeach(){
         SpatialRange range(minx, miny,maxx - minx, maxy - miny);
         locs neibors = indexTree.queryRange(range);
         for (locs::const_iterator it = neibors.begin(); it != neibors.end(); it++){
-            if (isColliding(balls[*it].get(),balls[i].get()))
+            if ((*it != i) &&isColliding(balls[*it].get(),balls[i].get()))
                 balls[i]->collideWith(balls[*it].get());
         }
     }
