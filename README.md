@@ -19,7 +19,11 @@ C++ / OpenGL项目.
 
 ## Content
 1. 基本数据结构ADT实现
+
 2. 数据结构实习1:迷宫
+
 ![maze](https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/data_strcture_maze.gif)
+
 3. 数据结构实习2: 粒子碰撞
-![collide](https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/data_strcture_collide.gif)
+
+![collide](https://github.com/HereIsZephyrus/zephyrus.img/blob/e5f471417e843eb613e3416a92f293253098492d/images/blog/data_strcture_collide.gif)
