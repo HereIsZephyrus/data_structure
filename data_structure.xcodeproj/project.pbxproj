@@ -87,6 +87,7 @@
 		32E233892CCA4184005513A9 /* imstb_rectpack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_rectpack.h; sourceTree = "<group>"; };
 		32E2338A2CCA4184005513A9 /* imstb_textedit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_textedit.h; sourceTree = "<group>"; };
 		32E2338B2CCA4184005513A9 /* imstb_truetype.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_truetype.h; sourceTree = "<group>"; };
+		32E233992CCA581E005513A9 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -123,6 +124,7 @@
 		328ADCF22CB655FB00765774 = {
 			isa = PBXGroup;
 			children = (
+				32E233992CCA581E005513A9 /* README.md */,
 				32E2338C2CCA4184005513A9 /* ImGUIopengl3 */,
 				328ADCFD2CB655FB00765774 /* data_structure */,
 				328ADD222CB7826800765774 /* Frameworks */,
