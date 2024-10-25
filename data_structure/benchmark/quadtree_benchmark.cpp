@@ -12,11 +12,13 @@
 #include "../ADT/tree.hpp"
 using namespace binarytree;
 using tcb::SpatialRange;
-
-void updateSpatialByQuadTreeIndex(GLfloat gridsize){
+using para = std::pair<GLuint, unsigned long long>;
+para updateSpatialByQuadTreeIndex(GLfloat gridsize){
     std::vector<std::unique_ptr<BallPara>> balls_bench;
     std::unique_ptr<BallPara> powerBall_bench;
     std::unique_ptr<Ball> ballVertices_bench,powerVertices_bench;
+    GLuint counter = 0;
+    unsigned long long collideCounter = 0;
     {
         WindowParas& windowPara = WindowParas::getInstance();
         const GLfloat xgrid = gridsize / windowPara.WINDOW_WIDTH,ygrid = gridsize / windowPara.WINDOW_HEIGHT;
@@ -33,7 +35,6 @@ void updateSpatialByQuadTreeIndex(GLfloat gridsize){
             }
         ballVertices_bench = std::make_unique<Ball>(normalVert,radius_setting[BallType::normal],color_setting[BallType::normal]);
         powerVertices_bench = std::make_unique<Ball>(powerVert,radius_setting[BallType::power],color_setting[BallType::power]);
-        GLuint counter = 0;
         for (GLfloat i = -1.0 + xgrid; i < 1.0f - xgrid; i += xgrid)
             for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
                 if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0){
@@ -73,6 +74,7 @@ void updateSpatialByQuadTreeIndex(GLfloat gridsize){
         for (size_t i = 0; i < balls_bench.size(); i++)
             if (isColliding(powerBall_bench.get(),balls_bench[i].get())){
                 powerBall_bench->collideWith(balls_bench[i].get());
+                ++ collideCounter;
             }
         for (size_t i = 0; i < balls_bench.size(); i++){
             const GLfloat x = balls_bench[i]->getX(), y = balls_bench[i]->getY(),r = balls_bench[i]->getR() * 2;
@@ -83,17 +85,21 @@ void updateSpatialByQuadTreeIndex(GLfloat gridsize){
             for (locs::const_iterator it = neibors.begin(); it != neibors.end(); it++){
                 if ((*it != i) &&isColliding(balls_bench[*it].get(),balls_bench[i].get())){
                     balls_bench[i]->collideWith(balls_bench[*it].get());
+                    ++collideCounter;
                 }
             }
         }
         ballVertices_bench->update();
         powerVertices_bench->update();
     }
+    return std::make_pair(counter, collideCounter);
 }
-void updateSpatialByNoIndex(GLfloat gridsize){
+para updateSpatialByNoIndex(GLfloat gridsize){
     std::vector<std::unique_ptr<BallPara>> balls_bench;
     std::unique_ptr<BallPara> powerBall_bench;
     std::unique_ptr<Ball> ballVertices_bench,powerVertices_bench;
+    GLuint counter = 0;
+    unsigned long long collideCounter = 0;
     {
         WindowParas& windowPara = WindowParas::getInstance();
         const GLfloat xgrid = gridsize / windowPara.WINDOW_WIDTH,ygrid = gridsize / windowPara.WINDOW_HEIGHT;
@@ -110,7 +116,6 @@ void updateSpatialByNoIndex(GLfloat gridsize){
             }
         ballVertices_bench = std::make_unique<Ball>(normalVert,radius_setting[BallType::normal],color_setting[BallType::normal]);
         powerVertices_bench = std::make_unique<Ball>(powerVert,radius_setting[BallType::power],color_setting[BallType::power]);
-        GLuint counter = 0;
         for (GLfloat i = -1.0 + xgrid; i < 1.0f - xgrid; i += xgrid)
             for (GLfloat j = - 1.0 + ygrid; j < 1.0f - ygrid; j += ygrid){
                 if (i < 0 && i + xgrid >= 0 && j <0 && j + ygrid >= 0){
@@ -149,16 +154,19 @@ void updateSpatialByNoIndex(GLfloat gridsize){
         for (size_t i = 0; i < balls_bench.size(); i++)
             if (isColliding(powerBall_bench.get(),balls_bench[i].get())){
                 powerBall_bench->collideWith(balls_bench[i].get());
+                ++ collideCounter;
             }
         for (size_t i = 0; i < balls_bench.size(); i++)
             for (size_t j = 0; j < balls_bench.size(); j++)
                 if (i != j && isColliding(balls_bench[i].get(),balls_bench[j].get())){
                     balls_bench[i]->collideWith(balls_bench[j].get());
+                    ++ collideCounter;
                     break;
                 }
         ballVertices_bench->update();
         powerVertices_bench->update();
     }
+    return std::make_pair(counter, collideCounter);
 }
 
 static void BM_QuadTreeIndex(benchmark::State& state) {
@@ -166,20 +174,30 @@ static void BM_QuadTreeIndex(benchmark::State& state) {
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return;
     InitResource(window);
+    para p;
     for (auto _ : state) {
-        updateSpatialByQuadTreeIndex(state.range(0));
+        p = updateSpatialByQuadTreeIndex(state.range(0));
+        benchmark::ClobberMemory();
+        state.counters["pointNum"] = p.first;
+        state.counters["collideNum"] = p.second;
     }
+    state.SetComplexityN(p.first);
 }
 static void BM_NoIndex(benchmark::State& state) {
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-粒子碰撞") != 0)
         return;
     InitResource(window);
+    para p;
     for (auto _ : state) {
-        updateSpatialByNoIndex(state.range(0));
+        p = updateSpatialByNoIndex(state.range(0));
+        benchmark::ClobberMemory();
+        state.counters["pointNum"] = p.first;
+        state.counters["collideNum"] = p.second;
     }
+    state.SetComplexityN(p.first);
 }
-BENCHMARK(BM_QuadTreeIndex)->Arg(72)->Arg(52)->Arg(36)->Arg(24)->Arg(18)->Arg(12);
-BENCHMARK(BM_NoIndex)->Arg(72)->Arg(52)->Arg(36)->Arg(24)->Arg(18)->Arg(12);
+BENCHMARK(BM_QuadTreeIndex)->Name("QuadTreeIndex")->Arg(72)->Arg(52)->Arg(36)->Arg(24)->Arg(18)->Arg(12)->Complexity(benchmark::oN);
+BENCHMARK(BM_NoIndex)->Name("NoIndex")->Arg(72)->Arg(52)->Arg(36)->Arg(24)->Arg(18)->Arg(12)->Complexity(benchmark::oN);
 
 //BENCHMARK_MAIN();

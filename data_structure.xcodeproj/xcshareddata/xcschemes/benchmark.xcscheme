@@ -56,6 +56,14 @@
             argument = "benchmark"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--benchmark_counters_tabular=true"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--benchmark_out=/Users/channingtong/Program/data_structure/data_structure/benchmark/collide_report.json"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
