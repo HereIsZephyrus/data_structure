@@ -22,8 +22,8 @@ C++ / OpenGL项目.
 
 2. 数据结构实习1:迷宫
 
-![maze](https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/data_strcture_maze.gif)
+![maze](https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/maze_animation_renew_resize.gif)
 
 3. 数据结构实习2: 粒子碰撞
 
-![collide](https://github.com/HereIsZephyrus/zephyrus.img/blob/e5f471417e843eb613e3416a92f293253098492d/images/blog/data_strcture_collide.gif)
+![collision](https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/collision_animation_renew.gif)
