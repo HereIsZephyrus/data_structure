@@ -182,4 +182,30 @@ void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree,unsigned long
 void BuildIndexTree(std::shared_ptr<IndexTree> indexTree);
 void DrawGUI(unsigned long long counter);
 }
+
+namespace transport {
+using std::vector;
+using std::string;
+void loadGeoResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
+class Recorder{
+public:
+    static Recorder& getRecord(){
+        static Recorder instance;
+        return instance;
+    }
+    Recorder(const Recorder&) = delete;
+    void operator=(const Recorder&) = delete;
+    int note[2];
+    glm::vec3 strechStartLoc;
+    static constexpr glm::vec3 defaultFaceColor = glm::vec3(1.0,1.0,1.0);
+    static constexpr glm::vec3 selectedFaceColor = glm::vec3(1.0,0.0,0.0);
+    static constexpr glm::vec3 defaultRoadColor = glm::vec3(0.0,0.0,1.0);
+    static constexpr glm::vec3 selectedRoadColor = glm::vec3(1.0,0.0,1.0);
+private:
+    Recorder(){
+        note[0] - -1;
+        note[1] = -1;
+    }
+};
+}
 #endif /* component_hpp */

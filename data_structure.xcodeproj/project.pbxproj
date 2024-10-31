@@ -21,6 +21,8 @@
 		323B68E92CC69B430041BBC3 /* libglfw.3.4.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 323B68E72CC69B430041BBC3 /* libglfw.3.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3260C0F62CB783AA001F0949 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F22CB783AA001F0949 /* libgtest.a */; };
 		3260C0F92CB783AA001F0949 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3260C0F52CB783AA001F0949 /* libgtest_main.a */; };
+		326151882CD0A56D004DE72D /* libgdal.35.3.9.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 326151872CD0A56D004DE72D /* libgdal.35.3.9.3.dylib */; };
+		326151892CD0A56D004DE72D /* libgdal.35.3.9.3.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 326151872CD0A56D004DE72D /* libgdal.35.3.9.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3279585F2CC9529500816150 /* libomp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3279585E2CC9529500816150 /* libomp.dylib */; };
 		327958602CC9529500816150 /* libomp.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 3279585E2CC9529500816150 /* libomp.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		32E2338D2CCA4184005513A9 /* imgui_impl_opengl3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E233842CCA4184005513A9 /* imgui_impl_opengl3.cpp */; };
@@ -41,6 +43,7 @@
 			files = (
 				323B68E92CC69B430041BBC3 /* libglfw.3.4.dylib in Embed Libraries */,
 				327958602CC9529500816150 /* libomp.dylib in Embed Libraries */,
+				326151892CD0A56D004DE72D /* libgdal.35.3.9.3.dylib in Embed Libraries */,
 				323B68E02CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Embed Libraries */,
 				323B68E62CC69B2E0041BBC3 /* libglm.dylib in Embed Libraries */,
 			);
@@ -69,6 +72,7 @@
 		3260C0F32CB783AA001F0949 /* libgmock_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock_main.a; path = ../../../../usr/local/lib/libgmock_main.a; sourceTree = "<group>"; };
 		3260C0F42CB783AA001F0949 /* libgmock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmock.a; path = ../../../../usr/local/lib/libgmock.a; sourceTree = "<group>"; };
 		3260C0F52CB783AA001F0949 /* libgtest_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest_main.a; path = ../../../../usr/local/lib/libgtest_main.a; sourceTree = "<group>"; };
+		326151872CD0A56D004DE72D /* libgdal.35.3.9.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgdal.35.3.9.3.dylib; path = ../../../../opt/homebrew/Cellar/gdal/3.9.3_1/lib/libgdal.35.3.9.3.dylib; sourceTree = "<group>"; };
 		3279585E2CC9529500816150 /* libomp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libomp.dylib; path = ../../../../opt/homebrew/Cellar/libomp/19.1.2/lib/libomp.dylib; sourceTree = "<group>"; };
 		328ADCFB2CB655FB00765774 /* data_structure */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = data_structure; sourceTree = BUILT_PRODUCTS_DIR; };
 		32E2337C2CCA4184005513A9 /* imconfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
@@ -110,6 +114,7 @@
 				3260C0F62CB783AA001F0949 /* libgtest.a in Frameworks */,
 				323B68E32CC69B000041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
 				323B68DB2CC699FC0041BBC3 /* libbenchmark_main.a in Frameworks */,
+				326151882CD0A56D004DE72D /* libgdal.35.3.9.3.dylib in Frameworks */,
 				323B68DF2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
 				323B68E22CC69AEC0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
 				3279585F2CC9529500816150 /* libomp.dylib in Frameworks */,
@@ -143,6 +148,7 @@
 		328ADD222CB7826800765774 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				326151872CD0A56D004DE72D /* libgdal.35.3.9.3.dylib */,
 				3279585E2CC9529500816150 /* libomp.dylib */,
 				323B68E72CC69B430041BBC3 /* libglfw.3.4.dylib */,
 				323B68E42CC69B2E0041BBC3 /* libglm.dylib */,
@@ -317,12 +323,14 @@
 					"${glfw_header-3.4}",
 					"${glew_header-2.2}",
 					/opt/homebrew/Cellar/libomp/19.1.2/include,
+					"${gdal_header_3.9}",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/usr/local/lib/,
 					/opt/homebrew/Cellar/glfw/3.4/lib,
 					/opt/homebrew/Cellar/glew/2.2.0_1/lib,
 					/opt/homebrew/Cellar/glm/1.0.1/lib,
+					/opt/homebrew/Cellar/gdal/3.9.3_1/lib,
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -385,12 +393,14 @@
 					"${glfw_header-3.4}",
 					"${glew_header-2.2}",
 					/opt/homebrew/Cellar/libomp/19.1.2/include,
+					"${gdal_header_3.9}",
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/usr/local/lib/,
 					/opt/homebrew/Cellar/glfw/3.4/lib,
 					/opt/homebrew/Cellar/glew/2.2.0_1/lib,
 					/opt/homebrew/Cellar/glm/1.0.1/lib,
+					/opt/homebrew/Cellar/gdal/3.9.3_1/lib,
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -404,6 +414,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = data_structure/data_structure.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 379P4X5DA9;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -424,6 +435,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = data_structure/data_structure.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 379P4X5DA9;
 				ENABLE_HARDENED_RUNTIME = YES;

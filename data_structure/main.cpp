@@ -20,9 +20,11 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "gdal.h"
 
 int maze_main();
 int binarytree_main();
+int transport_main();
 int main(int argc, char **argv){
     if (argc == 1){
         ::testing::InitGoogleTest(&argc, argv);
@@ -44,6 +46,9 @@ int main(int argc, char **argv){
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
         binarytree_main();
+    }else if (program_type == "transport"){
+        std::cout<<"transport"<<std::endl;
+        transport_main();
     }
     return 0;
 }
@@ -165,4 +170,18 @@ int binarytree_main(){
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
+}
+
+int transport_main(){
+    using namespace transport;
+    GLFWwindow *& window = WindowParas::getInstance().window;
+    Recorder& recorder = Recorder::getRecord();
+    if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-高铁最短路") != 0)
+        return -1;
+    GDALAllRegister();
+    std::string geojsonFolder = "/Users/channingtong/Program/data_structure/data_structure/GeoResource/";
+    std::string cityPath = geojsonFolder + "city.geojson";
+    vector<vector<Vertex>> city,road;
+    loadGeoResource(city,cityPath,recorder.defaultFaceColor);
+    return  0;
 }
