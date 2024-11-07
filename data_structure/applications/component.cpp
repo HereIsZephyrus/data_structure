@@ -19,13 +19,10 @@
 #include "../OpenGL/graphing.hpp"
 #include "../OpenGL/window.hpp"
 #include "../ADT/tree.hpp"
+#include "gdalfunc.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "gdal.h"
-#include "gdal_priv.h"
-#include <gdal_utils.h>
-#include "ogrsf_frmts.h"
 namespace maze{
 void Map::generate(){
     srand((unsigned int)time(0));
@@ -617,89 +614,7 @@ void DrawGUI(unsigned long long counter){
 namespace transport{
 using std::vector;
 using std::string;
-
-void extractVerticesFromGeometry(OGRGeometry* geom, std::vector<glm::vec2>& vertices) {
-    std::cout<<geom->getGeometryType()<<std::endl;
-    if (geom->getGeometryType() == wkbPoint) {
-        // 处理点
-        OGRPoint* point = static_cast<OGRPoint*>(geom);
-        vertices.push_back({point->getX(), point->getY()});
-    } else if (geom->getGeometryType() == wkbLineString) {
-        // 处理线段
-        OGRLineString* line = static_cast<OGRLineString*>(geom);
-        for (int i = 0; i < line->getNumPoints(); ++i) {
-            OGRPoint* point = nullptr;
-            line->getPoint(i, point);
-            vertices.push_back({point->getX(), point->getY()});
-        }
-    } else if (geom->getGeometryType() == wkbPolygon) {
-        // 处理多边形
-        OGRPolygon* polygon = static_cast<OGRPolygon*>(geom);
-        OGRLinearRing* exteriorRing = polygon->getExteriorRing();
-        if (exteriorRing) {
-            for (int i = 0; i < exteriorRing->getNumPoints(); ++i) {
-                OGRPoint* point = nullptr;
-                exteriorRing->getPoint(i, point);
-                vertices.push_back({point->getX(), point->getY()});
-            }
-        }
-        // 提取内环
-        for (int i = 0; i < polygon->getNumInteriorRings(); ++i) {
-            OGRLinearRing* interiorRing = polygon->getInteriorRing(i);
-            if (interiorRing) {
-                for (int j = 0; j < interiorRing->getNumPoints(); ++j) {
-                    OGRPoint* point = nullptr;
-                    interiorRing->getPoint(i, point);
-                    vertices.push_back({point->getX(), point->getY()});
-                }
-            }
-        }
-    } else if (geom->getGeometryType() == wkbMultiPoint) {
-        // 处理多点
-        OGRMultiPoint* multiPoint = static_cast<OGRMultiPoint*>(geom);
-        for (int i = 0; i < multiPoint->getNumGeometries(); ++i) {
-            OGRPoint* point = static_cast<OGRPoint*>(multiPoint->getGeometryRef(i));
-            vertices.push_back({point->getX(), point->getY()});
-        }
-    } else if (geom->getGeometryType() == wkbMultiLineString) {
-        // 处理多线
-        OGRMultiLineString* multiLine = static_cast<OGRMultiLineString*>(geom);
-        for (int i = 0; i < multiLine->getNumGeometries(); ++i) {
-            OGRLineString* line = static_cast<OGRLineString*>(multiLine->getGeometryRef(i));
-            for (int j = 0; j < line->getNumPoints(); ++j) {
-                OGRPoint* point = nullptr;
-                line->getPoint(i, point);
-                vertices.push_back({point->getX(), point->getY()});
-            }
-        }
-    } else if (geom->getGeometryType() == wkbMultiPolygon) {
-        // 处理多多边形
-        OGRMultiPolygon* multiPolygon = static_cast<OGRMultiPolygon*>(geom);
-        for (int i = 0; i < multiPolygon->getNumGeometries(); ++i) {
-            OGRPolygon* polygon = static_cast<OGRPolygon*>(multiPolygon->getGeometryRef(i));
-            OGRLinearRing* exteriorRing = polygon->getExteriorRing();
-            if (exteriorRing) {
-                for (int j = 0; j < exteriorRing->getNumPoints(); ++j) {
-                    OGRPoint* point = nullptr;
-                    exteriorRing->getPoint(i, point);
-                    vertices.push_back({point->getX(), point->getY()});
-                }
-            }
-            // 提取内环
-            for (int j = 0; j < polygon->getNumInteriorRings(); ++j) {
-                OGRLinearRing* interiorRing = polygon->getInteriorRing(j);
-                if (interiorRing) {
-                    for (int k = 0; k < interiorRing->getNumPoints(); ++k) {
-                        OGRPoint* point = nullptr;
-                        interiorRing->getPoint(i, point);
-                        vertices.push_back({point->getX(), point->getY()});
-                    }
-                }
-            }
-        }
-    }
-}
-void loadGeoResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color){
+void loadGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color){
     GDALDataset* poDataset = (GDALDataset*) GDALOpenEx(resourcename.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
 
     if (poDataset == nullptr) {
@@ -719,8 +634,6 @@ void loadGeoResource(vector<vector<Vertex>>& pointDataset,string resourcename,co
             if (poGeometry) {
                 std::vector<glm::vec2> vertices;
                 extractVerticesFromGeometry(poGeometry, vertices);
-
-                // 输出顶点数据
                 std::cout << "Vertices:" << std::endl;
                 for (const auto& vertex : vertices) {
                     std::cout << "(" << vertex.x << ", " << vertex.y << ")" << std::endl;

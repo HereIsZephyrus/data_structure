@@ -182,6 +182,6 @@ int transport_main(){
     std::string geojsonFolder = "/Users/channingtong/Program/data_structure/data_structure/GeoResource/";
     std::string cityPath = geojsonFolder + "city.geojson";
     vector<vector<Vertex>> city,road;
-    loadGeoResource(city,cityPath,recorder.defaultFaceColor);
+    loadGeoJsonResource(city,cityPath,recorder.defaultFaceColor);
     return  0;
 }

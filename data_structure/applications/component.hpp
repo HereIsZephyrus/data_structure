@@ -9,6 +9,10 @@
 #define component_hpp
 #include <vector>
 #include <map>
+#include <gdal.h>
+#include <gdal_priv.h>
+#include <gdal_utils.h>
+#include <ogrsf_frmts.h>
 #include "../OpenGL/graphing.hpp"
 #include "../ADT/tree.hpp"
 namespace maze{
@@ -186,7 +190,7 @@ void DrawGUI(unsigned long long counter);
 namespace transport {
 using std::vector;
 using std::string;
-void loadGeoResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
+void loadGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
 class Recorder{
 public:
     static Recorder& getRecord(){

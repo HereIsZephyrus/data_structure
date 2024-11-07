@@ -324,6 +324,7 @@
 					"${glew_header-2.2}",
 					/opt/homebrew/Cellar/libomp/19.1.2/include,
 					"${gdal_header_3.9}",
+					/opt/homebrew/Cellar/cgal/6.0.1/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/usr/local/lib/,
@@ -394,6 +395,7 @@
 					"${glew_header-2.2}",
 					/opt/homebrew/Cellar/libomp/19.1.2/include,
 					"${gdal_header_3.9}",
+					/opt/homebrew/Cellar/cgal/6.0.1/include,
 				);
 				LIBRARY_SEARCH_PATHS = (
 					/usr/local/lib/,
@@ -424,6 +426,7 @@
 					/opt/homebrew/Cellar/glm/1.0.1/lib,
 					/opt/homebrew/Cellar/glfw/3.4/lib,
 					/opt/homebrew/Cellar/libomp/19.1.2/lib,
+					/opt/homebrew/Cellar/cgal/6.0.1/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -445,6 +448,7 @@
 					/opt/homebrew/Cellar/glm/1.0.1/lib,
 					/opt/homebrew/Cellar/glfw/3.4/lib,
 					/opt/homebrew/Cellar/libomp/19.1.2/lib,
+					/opt/homebrew/Cellar/cgal/6.0.1/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 6.0;
