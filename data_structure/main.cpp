@@ -204,14 +204,15 @@ int transport_main(){
             recorder.toCheckSelect = false;
             bool toSolve = citygroup.checkSelect(recorder.clickLoc);
             if (toSolve)
-                solveThisCityPair(recorder.startID,recorder.endID,stations);
+                InitSolvers(recorder.startID,recorder.endID,stations);
         }
         citygroup.draw();
         if (recorder.toGenerateRoute){
             bool toMoveStep = checkWholeTic();
             if (toMoveStep)
                 ++recorder.tickStep;
-            recorder.primPath->draw(recorder.tickStep);
+            recorder.primSolver->checkToSolve(recorder.tickStep, stations);
+            recorder.primPath->draw();
         }
         glfwSwapBuffers(window);
     }

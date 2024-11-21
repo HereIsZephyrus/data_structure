@@ -13,7 +13,8 @@ void main() {
     vec2 direction = normalize(p1.xy - p0.xy) / 10;
     float width =  (thickness) / 2.0 ;
     vec2 normal = vec2(-direction.y, direction.x) * width ;
-    float arrowWidthRate =  4;
+    float arrowWidthRate =  8;
+    vec4 noHaedp1 = p1 - vec4(direction * thickness * arrowWidthRate,0.0,0.0);
 
     gl_Position = p0 + vec4(-normal.x, -normal.y, 0.0, 0.0);
     EmitVertex();
@@ -26,16 +27,23 @@ void main() {
     
     gl_Position = p0 - vec4(normal, 0.0, 0.0);
     EmitVertex();
-    gl_Position = p1 + vec4(normal, 0.0, 0.0);
+    gl_Position = noHaedp1 + vec4(normal, 0.0, 0.0);
     EmitVertex();
     
-    gl_Position = p1 + vec4(-normal.x, -normal.y, 0.0, 0.0);
+    gl_Position = noHaedp1 + vec4(-normal.x, -normal.y, 0.0, 0.0);
     EmitVertex();
-    gl_Position = p1 + vec4(-normal.x, normal.y, 0.0, 0.0);
+    gl_Position = noHaedp1 + vec4(-normal.x, normal.y, 0.0, 0.0);
     EmitVertex();
-    gl_Position = p1 + vec4(normal.x, -normal.y, 0.0, 0.0);
+    gl_Position = noHaedp1 + vec4(normal.x, -normal.y, 0.0, 0.0);
     EmitVertex();
-    gl_Position = p1 + vec4(normal.x, normal.y , 0.0, 0.0);
+    gl_Position = noHaedp1 + vec4(normal.x, normal.y , 0.0, 0.0);
+    EmitVertex();
+    // arrow
+    gl_Position = noHaedp1 + vec4(normal, 0.0, 0.0) * arrowWidthRate;
+    EmitVertex();
+    gl_Position = noHaedp1 - vec4(normal, 0.0, 0.0) * arrowWidthRate;
+    EmitVertex();
+    gl_Position = p1;
     EmitVertex();
     EndPrimitive();
 }

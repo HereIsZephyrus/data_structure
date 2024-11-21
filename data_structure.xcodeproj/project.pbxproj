@@ -8,12 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		323B68D92CC699E90041BBC3 /* libbenchmark.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68D72CC699DB0041BBC3 /* libbenchmark.a */; };
-		323B68DA2CC699F30041BBC3 /* libbenchmark.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68D72CC699DB0041BBC3 /* libbenchmark.a */; };
 		323B68DB2CC699FC0041BBC3 /* libbenchmark_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68D82CC699DB0041BBC3 /* libbenchmark_main.a */; };
 		323B68DD2CC69A4C0041BBC3 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DC2CC69A4C0041BBC3 /* OpenGL.framework */; };
-		323B68DF2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; };
 		323B68E02CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		323B68E22CC69AEC0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; };
 		323B68E32CC69B000041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68DE2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib */; };
 		323B68E52CC69B2E0041BBC3 /* libglm.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B68E42CC69B2E0041BBC3 /* libglm.dylib */; };
 		323B68E62CC69B2E0041BBC3 /* libglm.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 323B68E42CC69B2E0041BBC3 /* libglm.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -115,10 +112,7 @@
 				323B68E32CC69B000041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
 				323B68DB2CC699FC0041BBC3 /* libbenchmark_main.a in Frameworks */,
 				326151882CD0A56D004DE72D /* libgdal.35.3.9.3.dylib in Frameworks */,
-				323B68DF2CC69ADE0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
-				323B68E22CC69AEC0041BBC3 /* libGLEW.2.2.0.dylib in Frameworks */,
 				3279585F2CC9529500816150 /* libomp.dylib in Frameworks */,
-				323B68DA2CC699F30041BBC3 /* libbenchmark.a in Frameworks */,
 				3260C0F92CB783AA001F0949 /* libgtest_main.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -220,7 +214,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1610;
 				TargetAttributes = {
 					328ADCFA2CB655FB00765774 = {
 						CreatedOnToolsVersion = 16.0;
@@ -299,6 +293,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -375,6 +370,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -416,6 +412,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = data_structure/data_structure.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 379P4X5DA9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LIBRARY_SEARCH_PATHS = (
@@ -438,6 +435,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = data_structure/data_structure.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 379P4X5DA9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				LIBRARY_SEARCH_PATHS = (

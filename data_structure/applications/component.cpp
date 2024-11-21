@@ -707,6 +707,14 @@ void InitResource(GLFWwindow *& window){
         ShaderBucket["line"] = std::move(line);
     }
     {
+        pShader route (new Shader());
+        route->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        route->attchShader(filePath("transport_route.gs"),GL_GEOMETRY_SHADER);
+        route->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        route->linkProgram();
+        ShaderBucket["route"] = std::move(route);
+    }
+    {
         pShader city (new Shader());
         city->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
         city->attchShader(filePath("binarytree_ball.gs"),GL_GEOMETRY_SHADER);
@@ -804,22 +812,18 @@ bool checkWholeTic(){
         return true;
     return false;
 }
-void solveThisCityPair(int startID,int endID,const vector<Station>& stations){
-    vector<std::pair<int,int>> path;
-    solveBasicPath(startID,endID,stations);
-    solvePrimPath(startID,endID,stations);
-    solveKruskalPath(startID,endID,stations);
+void InitSolvers(int startID,int endID,const vector<Station>& stations){
+    size_t vertexNum = stations.size();
     Recorder& recorder = Recorder::getRecord();
+    recorder.primSolver = std::make_unique<PrimSolver>(vertexNum,startID,endID);
     recorder.startRoutingTIme = glfwGetTime();
     recorder.tickStep = 1;
 }
 void solveBasicPath(const int startID,const int endID,const vector<Station>& stations){
-    vector<std::pair<int,int>> path;
-    
+    Recorder& recorder = Recorder::getRecord();
 }
 void solvePrimPath(const int startID,const int endID,const vector<Station>& stations){
     using std::pair;
-    vector<pair<int,int>> path;
     const size_t vertexNum = stations.size();
     vector<int> minWeight(vertexNum, 1e9);
     vector<int> prevID(vertexNum, -1);
@@ -840,25 +844,26 @@ void solvePrimPath(const int startID,const int endID,const vector<Station>& stat
                 minWeight[v] = length;
                 prevID[v] = u;
                 pq.push({length, v});
+                vector<pair<int,int>> path;
+                vector<Vertex> vertices;
+                for (int at = v; prevID[at] != -1; at = prevID[at])
+                    path.push_back({at,prevID[at]});
+                std::reverse(path.begin(),path.end());
+                Recorder& recorder = Recorder::getRecord();
+                for (vector<pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
+                    const GLfloat sx = stations[route->second].getX();
+                    const GLfloat sy = stations[route->second].getY();
+                    const GLfloat tx = stations[route->first].getX();
+                    const GLfloat ty = stations[route->first].getY();
+                    //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
+                    vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.primTrunkColor));
+                    vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.primTrunkColor));
+                }
+                recorder.primPath = nullptr;
+                recorder.primPath = std::make_unique<Route>(vertices);
             }
         }
     }
-    for (int at = endID; prevID[at] != -1; at = prevID[at])
-        path.push_back({at,prevID[at]});
-    std::reverse(path.begin(),path.end());
-    vector<Vertex> vertices;
-    Recorder& recorder = Recorder::getRecord();
-    for (vector<pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
-        const GLfloat sx = stations[route->first].getX();
-        const GLfloat sy = stations[route->first].getY();
-        const GLfloat tx = stations[route->second].getX();
-        const GLfloat ty = stations[route->second].getY();
-        //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
-        vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.primTrunkColor));
-        vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.primTrunkColor));
-    }
-    recorder.primPath = nullptr;
-    recorder.primPath = std::make_unique<Route>(vertices);
 }
 void solveKruskalPath(const int startID,const int endID,const vector<Station>& stations){
     vector<std::pair<int,int>> path;
@@ -871,8 +876,54 @@ void Route::draw() const{
     glUniform1f(thicknessLoc,0.04f);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
-    size_t length = std::min(static_cast<size_t>(step * 2),vertexNum);
-    glDrawArrays(shape, 0, length);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
     glBindVertexArray(0);
+}
+void PrimSolver::checkToSolve(int steptic,const vector<Station>& stations){
+    if (steptic <= step || step == -1)
+        return;
+    ++step;
+    Recorder& recorder = Recorder::getRecord();
+    vector<std::pair<int,int>> path;
+    vector<Vertex> vertices;
+    if (!pq.empty()){
+        int u = pq.top().second;
+        pq.pop();
+        if (!inMST[u]){
+            inMST[u] = true;
+            const size_t adjNum = stations[u].adj.size();
+            for (size_t i = 0; i < adjNum; i++){
+                int v = stations[u].adj[i];
+                float length = stations[u].length[i];
+                if (!inMST[v] && length < minWeight[v]) {
+                    minWeight[v] = length;
+                    prevID[v] = u;
+                    pq.push({length, v});
+                    for (int at = v; prevID[at] != -1; at = prevID[at])
+                        path.push_back({at,prevID[at]});
+                }
+            }
+        }
+        if (path.empty())
+            for (int at = u; prevID[at] != -1; at = prevID[at])
+                path.push_back({at,prevID[at]});
+    }
+    else{//finish search
+        for (int at = endID; prevID[at] != -1; at = prevID[at])
+            path.push_back({at,prevID[at]});
+        step = -1;
+    }
+    std::reverse(path.begin(),path.end());
+    for (vector<std::pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
+        const GLfloat sx = stations[route->second].getX();
+        const GLfloat sy = stations[route->second].getY();
+        const GLfloat tx = stations[route->first].getX();
+        const GLfloat ty = stations[route->first].getY();
+        //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
+        vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.primTrunkColor));
+        vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.primTrunkColor));
+    }
+    recorder.primPath = nullptr;
+    recorder.primPath = std::make_unique<Route>(vertices);
 }
 }
