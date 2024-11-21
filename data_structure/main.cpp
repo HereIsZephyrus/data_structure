@@ -178,10 +178,30 @@ int transport_main(){
     Recorder& recorder = Recorder::getRecord();
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-高铁最短路") != 0)
         return -1;
+    InitResource(window);
     GDALAllRegister();
     std::string geojsonFolder = "/Users/channingtong/Program/data_structure/data_structure/GeoResource/";
     std::string cityPath = geojsonFolder + "city.geojson";
-    vector<vector<Vertex>> city,road;
-    loadGeoJsonResource(city,cityPath,recorder.defaultFaceColor);
+    std::string trunkPath = geojsonFolder + "trunk.geojson";
+    vector<vector<Vertex>> trunkPoints;
+    vector<Vertex> cityPoints;
+    loadLineGeoJsonResource(trunkPoints,trunkPath,recorder.defaultTrunkColor);
+    loadPointGeoJsonResource(cityPoints,cityPath,recorder.defaultCityColor);
+    vector<std::unique_ptr<Trunk>> trunks;
+    for (vector<vector<Vertex>>::iterator trunkPoint = trunkPoints.begin(); trunkPoint != trunkPoints.end(); trunkPoint++){
+        trunks.push_back(std::make_unique<Trunk>(*trunkPoint));
+    }
+    Citys citygroup = Citys(cityPoints);
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        glClearColor(0,0,0,0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for (vector<std::unique_ptr<Trunk>>::iterator trunk = trunks.begin(); trunk != trunks.end(); trunk++)
+            (*trunk)->draw();
+        citygroup.draw();
+        glfwSwapBuffers(window);
+    }
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return  0;
 }

@@ -19,7 +19,6 @@
 #include "../OpenGL/graphing.hpp"
 #include "../OpenGL/window.hpp"
 #include "../ADT/tree.hpp"
-#include "gdalfunc.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -337,19 +336,6 @@ void Ball::draw(double timetic){
     glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
     glBindVertexArray(0);
 }
-void Ball::update(){
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum * 6, vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)(sizeof(GLfloat) * 3));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
 bool BallPara::move(){
     const GLfloat rawX = x, rawY = y;
     x += timeRatio * v.vx;
@@ -614,9 +600,8 @@ void DrawGUI(unsigned long long counter){
 namespace transport{
 using std::vector;
 using std::string;
-void loadGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color){
+void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color){
     GDALDataset* poDataset = (GDALDataset*) GDALOpenEx(resourcename.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
-
     if (poDataset == nullptr) {
         std::cerr << "Failed to open GeoJSON file: " << resourcename << std::endl;
         return;
@@ -627,21 +612,111 @@ void loadGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcenam
         GDALClose(poDataset);
         return;
     }
-    
     OGRFeature *poFeature;
+    Recorder& recorder = Recorder::getRecord();
     while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
-            OGRGeometry* poGeometry = poFeature->GetGeometryRef();
-            if (poGeometry) {
-                std::vector<glm::vec2> vertices;
-                extractVerticesFromGeometry(poGeometry, vertices);
-                std::cout << "Vertices:" << std::endl;
-                for (const auto& vertex : vertices) {
-                    std::cout << "(" << vertex.x << ", " << vertex.y << ")" << std::endl;
+        OGRGeometry* geometry = poFeature->GetGeometryRef();
+        if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbMultiLineString) {
+            OGRMultiLineString* multiLineString = dynamic_cast<OGRMultiLineString*>(geometry);
+            if (multiLineString != nullptr) {
+                vector<Vertex> resLine;
+                for (int i = 0; i < multiLineString->getNumGeometries(); i++) {
+                    OGRLineString* lineString = dynamic_cast<OGRLineString*>(multiLineString->getGeometryRef(i));
+                    if (lineString != nullptr) {
+                        for (int j = 0; j < lineString->getNumPoints(); j++){
+                            OGRPoint point;
+                            lineString->getPoint(j, &point);
+                            double x = point.getX(), y = point.getY();
+                            x = 2 * (x - recorder.minCoodx) / (recorder.maxCoodx - recorder.minCoodx) - 1;
+                            y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
+                            resLine.push_back(Vertex(glm::vec3(x,y,0),color));
+                            if (j != 0 && j != lineString->getNumPoints()-1)
+                                resLine.push_back(Vertex(glm::vec3(x,y,0),color));
+                            // double insert to show multi string. OpenGL type is line
+                        }
+                    }
                 }
+                pointDataset.push_back(resLine);
             }
-            OGRFeature::DestroyFeature(poFeature);
         }
-
+        OGRFeature::DestroyFeature(poFeature);
+    }
     GDALClose(poDataset);
+}
+void loadPointGeoJsonResource(vector<Vertex>& pointDataset,string resourcename,const glm::vec3 color){
+    GDALDataset* poDataset = (GDALDataset*) GDALOpenEx(resourcename.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if (poDataset == nullptr) {
+        std::cerr << "Failed to open GeoJSON file: " << resourcename << std::endl;
+        return;
+    }
+    OGRLayer* poLayer = poDataset->GetLayer(0);
+    if (poLayer == nullptr) {
+        std::cerr << "Failed to get layer from GeoJSON." << std::endl;
+        GDALClose(poDataset);
+        return;
+    }
+    OGRFeature *poFeature;
+    Recorder& recorder = Recorder::getRecord();
+    while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
+        OGRGeometry* geometry = poFeature->GetGeometryRef();
+        if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbPoint) {
+            OGRPoint* point = dynamic_cast<OGRPoint*>(geometry);
+            if (point != nullptr){
+                double x = point->getX(), y = point->getY();
+                x = 2 * (x - recorder.minCoodx) / (recorder.maxCoodx - recorder.minCoodx) - 1;
+                y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
+                pointDataset.push_back(Vertex(glm::vec3(x,y,0),color));
+            }
+        }
+        OGRFeature::DestroyFeature(poFeature);
+    }
+    GDALClose(poDataset);
+}
+void InitResource(GLFWwindow *& window){
+    //glfwSetKeyCallback(window, keyCallback);
+    //glfwSetMouseButtonCallback(window, mouseCallback);
+    //glfwSetCursorPosCallback(window, cursorCallback);
+    {
+        pShader line (new Shader());
+        line->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        line->attchShader(filePath("maze_line.gs"),GL_GEOMETRY_SHADER);
+        line->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        line->linkProgram();
+        ShaderBucket["line"] = std::move(line);
+    }
+    {
+        pShader city (new Shader());
+        city->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        city->attchShader(filePath("binarytree_ball.gs"),GL_GEOMETRY_SHADER);
+        city->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        city->linkProgram();
+        ShaderBucket["city"] = std::move(city);
+    }
+    srand((unsigned int)time(0));
+}
+void Trunk::draw() const{
+    if (shader == nullptr){
+        std::cerr<<"havn't bind shader"<<std::endl;
+        return;
+    }
+    else
+        shader ->use();
+    GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(thicknessLoc,0.002f);
+    glUniform1f(transparentLoc,0.8f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
+void Citys::draw() const{
+    shader ->use();
+    GLuint radiusLoc = glGetUniformLocation(shader->program, "radius");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(radiusLoc,0.02f);
+    glUniform1f(transparentLoc,1.0f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
 }
 }

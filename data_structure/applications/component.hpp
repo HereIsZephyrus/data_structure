@@ -129,7 +129,6 @@ public:
     Primitive(ballVertex,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){}
     void draw() const override;
     void draw(double timetic);
-    void update();
     GLfloat& getX(GLuint num){return vertices[num * 6];}
     GLfloat& getY(GLuint num){return vertices[num * 6 + 1];}
 private:
@@ -190,7 +189,8 @@ void DrawGUI(unsigned long long counter);
 namespace transport {
 using std::vector;
 using std::string;
-void loadGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
+void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
+void loadPointGeoJsonResource(vector<Vertex>& pointDataset,string resourcename,const glm::vec3 color);
 class Recorder{
 public:
     static Recorder& getRecord(){
@@ -201,15 +201,32 @@ public:
     void operator=(const Recorder&) = delete;
     int note[2];
     glm::vec3 strechStartLoc;
-    static constexpr glm::vec3 defaultFaceColor = glm::vec3(1.0,1.0,1.0);
-    static constexpr glm::vec3 selectedFaceColor = glm::vec3(1.0,0.0,0.0);
-    static constexpr glm::vec3 defaultRoadColor = glm::vec3(0.0,0.0,1.0);
-    static constexpr glm::vec3 selectedRoadColor = glm::vec3(1.0,0.0,1.0);
+    static constexpr glm::vec3 defaultTrunkColor = glm::vec3(1.0,1.0,1.0);
+    static constexpr glm::vec3 selectedTrunkColor = glm::vec3(1.0,0.0,0.0);
+    static constexpr glm::vec3 defaultCityColor  = glm::vec3(0.0,0.0,1.0);
+    static constexpr glm::vec3 selectedCityColor = glm::vec3(1.0,0.0,1.0);
+    static constexpr double maxCoodx = 135.0;
+    static constexpr double minCoodx = 75.0;
+    static constexpr double maxCoody = 54.0;
+    static constexpr double minCoody = 18.0;
 private:
     Recorder(){
         note[0] - -1;
         note[1] = -1;
     }
+};
+void InitResource(GLFWwindow *& window);
+class Trunk : public Primitive{
+public:
+    Trunk(const std::vector<Vertex>& arrowVertex):
+    Primitive(arrowVertex,GL_LINES,ShaderBucket["line"].get()){}
+    void draw() const override;
+};
+class Citys : public Primitive{
+public:
+    Citys(const std::vector<Vertex>& ballVertices):
+    Primitive(ballVertices,GL_POINTS,ShaderBucket["city"].get()){}
+    void draw() const override;
 };
 }
 #endif /* component_hpp */
