@@ -185,20 +185,33 @@ int transport_main(){
     std::string trunkPath = geojsonFolder + "trunk.geojson";
     vector<vector<Vertex>> trunkPoints;
     vector<Vertex> cityPoints;
+    vector<Station> stations;
     loadLineGeoJsonResource(trunkPoints,trunkPath,recorder.defaultTrunkColor);
-    loadPointGeoJsonResource(cityPoints,cityPath,recorder.defaultCityColor);
+    loadPointGeoJsonResource(cityPoints,stations,cityPath,recorder.defaultCityColor);
     vector<std::unique_ptr<Trunk>> trunks;
     for (vector<vector<Vertex>>::iterator trunkPoint = trunkPoints.begin(); trunkPoint != trunkPoints.end(); trunkPoint++){
         trunks.push_back(std::make_unique<Trunk>(*trunkPoint));
     }
     Citys citygroup = Citys(cityPoints);
+    calcDirectLength(stations,citygroup);
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         for (vector<std::unique_ptr<Trunk>>::iterator trunk = trunks.begin(); trunk != trunks.end(); trunk++)
             (*trunk)->draw();
+        if (recorder.toCheckSelect){
+            recorder.toCheckSelect = false;
+            bool toSolve = citygroup.checkSelect(recorder.clickLoc);
+            if (toSolve)
+                solveThisCityPair(recorder.startID,recorder.endID,stations);
+        }
         citygroup.draw();
+        if (recorder.toGenerateRoute){
+            bool toMoveStep = checkWholeTic();
+            if (toMoveStep)    ++recorder.tickStep;
+            recorder.primPath->draw(recorder.tickStep);
+        }
         glfwSwapBuffers(window);
     }
     glfwDestroyWindow(window);

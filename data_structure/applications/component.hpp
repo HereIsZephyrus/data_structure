@@ -189,8 +189,14 @@ void DrawGUI(unsigned long long counter);
 namespace transport {
 using std::vector;
 using std::string;
-void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
-void loadPointGeoJsonResource(vector<Vertex>& pointDataset,string resourcename,const glm::vec3 color);
+void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+class Route : public Primitive{
+    void draw() const override;
+    int step;
+public:
+    Route(const vector<Vertex>& vertices):Primitive(vertices, GL_LINES, ShaderBucket["line"].get()){}
+    void draw(int steptic){step = steptic; draw();}
+};
 class Recorder{
 public:
     static Recorder& getRecord(){
@@ -199,10 +205,19 @@ public:
     }
     Recorder(const Recorder&) = delete;
     void operator=(const Recorder&) = delete;
-    int note[2];
-    glm::vec3 strechStartLoc;
+    std::map<int,int> mapID;
+    int mapping(int tomap) const {return mapID.at(tomap);}
+    bool toGenerateRoute,toCheckSelect;
+    glm::vec2 clickLoc;
+    int tickStep;
+    int startID,endID;
+    double startRoutingTIme;
+    std::unique_ptr<Route> basicPath,primPath,kruskalPath;
+    //vector<std::pair<int,int>> basicPath,primPath,kruskalPath;
     static constexpr glm::vec3 defaultTrunkColor = glm::vec3(1.0,1.0,1.0);
-    static constexpr glm::vec3 selectedTrunkColor = glm::vec3(1.0,0.0,0.0);
+    static constexpr glm::vec3 basicTrunkColor = glm::vec3(1.0,0.0,0.0);//red
+    static constexpr glm::vec3 primTrunkColor = glm::vec3(0.0,1.0,0.0);//green
+    static constexpr glm::vec3 kruskalTrunkColor = glm::vec3(1.0,0.0,1.0);//purple
     static constexpr glm::vec3 defaultCityColor  = glm::vec3(0.0,0.0,1.0);
     static constexpr glm::vec3 selectedCityColor = glm::vec3(1.0,0.0,1.0);
     static constexpr double maxCoodx = 135.0;
@@ -211,8 +226,9 @@ public:
     static constexpr double minCoody = 18.0;
 private:
     Recorder(){
-        note[0] - -1;
-        note[1] = -1;
+        toGenerateRoute = false;
+        toCheckSelect = false;
+        mapID.clear();
     }
 };
 void InitResource(GLFWwindow *& window);
@@ -223,10 +239,34 @@ public:
     void draw() const override;
 };
 class Citys : public Primitive{
+    static constexpr float radius = 0.015f;
+    int startCityID;
 public:
     Citys(const std::vector<Vertex>& ballVertices):
-    Primitive(ballVertices,GL_POINTS,ShaderBucket["city"].get()){}
+    Primitive(ballVertices,GL_POINTS,ShaderBucket["city"].get()),startCityID(-1){}
     void draw() const override;
+    bool checkSelect(const glm::vec2& clickloc);
+    float calcLength(int start,int end) const{
+        const float sx = vertices[start * 6], tx = vertices[end * 6], sy = vertices[start * 6 + 1], ty = vertices[end * 6 + 1];
+        return std::sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty));
+    }
 };
+class Station{
+    int id;
+public:
+    vector<int> adj;
+    vector<float> length;
+    Station(int id,vector<int> adj) : id(id),adj(adj){}
+    Station(int id,std::string neighborStr);
+    int getID() const {return id;}
+};
+void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
+void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stations,string resourcename,const glm::vec3 color);
+void calcDirectLength(vector<Station>& stations,const Citys& citygroup);
+bool checkWholeTic();
+void solveBasicPath(const int startID,const int endID,const vector<Station>& stations);
+void solvePrimPath(const int startID,const int endID,const vector<Station>& stations);
+void solveKruskalPath(const int startID,const int endID,const vector<Station>& stations);
+void solveThisCityPair(int startID,int endID,const vector<Station>& stations);
 }
 #endif /* component_hpp */

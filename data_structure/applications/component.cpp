@@ -606,16 +606,16 @@ void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourc
         std::cerr << "Failed to open GeoJSON file: " << resourcename << std::endl;
         return;
     }
-    OGRLayer* poLayer = poDataset->GetLayer(0);
-    if (poLayer == nullptr) {
+    OGRLayer* layer = poDataset->GetLayer(0);
+    if (layer == nullptr) {
         std::cerr << "Failed to get layer from GeoJSON." << std::endl;
         GDALClose(poDataset);
         return;
     }
-    OGRFeature *poFeature;
+    OGRFeature *feature;
     Recorder& recorder = Recorder::getRecord();
-    while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
-        OGRGeometry* geometry = poFeature->GetGeometryRef();
+    while ((feature = layer->GetNextFeature()) != nullptr) {
+        OGRGeometry* geometry = feature->GetGeometryRef();
         if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbMultiLineString) {
             OGRMultiLineString* multiLineString = dynamic_cast<OGRMultiLineString*>(geometry);
             if (multiLineString != nullptr) {
@@ -639,42 +639,63 @@ void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourc
                 pointDataset.push_back(resLine);
             }
         }
-        OGRFeature::DestroyFeature(poFeature);
+        OGRFeature::DestroyFeature(feature);
     }
     GDALClose(poDataset);
 }
-void loadPointGeoJsonResource(vector<Vertex>& pointDataset,string resourcename,const glm::vec3 color){
+void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stations,string resourcename,const glm::vec3 color){
     GDALDataset* poDataset = (GDALDataset*) GDALOpenEx(resourcename.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
     if (poDataset == nullptr) {
         std::cerr << "Failed to open GeoJSON file: " << resourcename << std::endl;
         return;
     }
-    OGRLayer* poLayer = poDataset->GetLayer(0);
-    if (poLayer == nullptr) {
+    OGRLayer* layer = poDataset->GetLayer(0);
+    if (layer == nullptr) {
         std::cerr << "Failed to get layer from GeoJSON." << std::endl;
         GDALClose(poDataset);
         return;
     }
-    OGRFeature *poFeature;
+    OGRFeature *feature;
     Recorder& recorder = Recorder::getRecord();
-    while ((poFeature = poLayer->GetNextFeature()) != nullptr) {
-        OGRGeometry* geometry = poFeature->GetGeometryRef();
-        if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbPoint) {
-            OGRPoint* point = dynamic_cast<OGRPoint*>(geometry);
-            if (point != nullptr){
-                double x = point->getX(), y = point->getY();
-                x = 2 * (x - recorder.minCoodx) / (recorder.maxCoodx - recorder.minCoodx) - 1;
-                y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
-                pointDataset.push_back(Vertex(glm::vec3(x,y,0),color));
+    int idNum = 0;
+    while ((feature = layer->GetNextFeature()) != nullptr) {
+        OGRGeometry* geometry = feature->GetGeometryRef();
+        if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbMultiPoint) {
+            OGRMultiPoint* multiPoint = dynamic_cast<OGRMultiPoint*>(geometry);
+            if (multiPoint != nullptr){
+                for (int i = 0; i < multiPoint->getNumGeometries(); ++i) {
+                    OGRPoint* point = dynamic_cast<OGRPoint*>(multiPoint->getGeometryRef(i));
+                    if (point != nullptr) {
+                        double x = point->getX(), y = point->getY();
+                        x = 2 * (x - recorder.minCoodx) / (recorder.maxCoodx - recorder.minCoodx) - 1;
+                        y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
+                        pointDataset.push_back(Vertex(glm::vec3(x,y,0),color));
+                        std::string neighbors = std::string(feature->GetFieldAsString("neighbors"));
+                        std::cout<<neighbors<<std::endl;
+                        stations.push_back(Station(idNum,neighbors));
+                        recorder.mapID[idNum] = static_cast<int>(pointDataset.size())-1;
+                        idNum++;
+                    }
+                }
             }
         }
-        OGRFeature::DestroyFeature(poFeature);
+        OGRFeature::DestroyFeature(feature);
     }
     GDALClose(poDataset);
 }
+void mouseCallback(GLFWwindow* window, int button, int action, int mods){
+    Recorder& recorder = Recorder::getRecord();
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS ){
+        WindowParas& windowPara = WindowParas::getInstance();
+        GLdouble xpos,ypos;
+        glfwGetCursorPos(windowPara.window, &xpos, &ypos);
+        recorder.toCheckSelect = true;
+        recorder.clickLoc = glm::vec2(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos));
+    }
+}
 void InitResource(GLFWwindow *& window){
     //glfwSetKeyCallback(window, keyCallback);
-    //glfwSetMouseButtonCallback(window, mouseCallback);
+    glfwSetMouseButtonCallback(window, mouseCallback);
     //glfwSetCursorPosCallback(window, cursorCallback);
     {
         pShader line (new Shader());
@@ -713,10 +734,132 @@ void Citys::draw() const{
     shader ->use();
     GLuint radiusLoc = glGetUniformLocation(shader->program, "radius");
     GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
-    glUniform1f(radiusLoc,0.02f);
+    glUniform1f(radiusLoc,radius);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
     glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
+bool Citys::checkSelect(const glm::vec2& clickloc){
+    Recorder& recorder = Recorder::getRecord();
+    if (recorder.toGenerateRoute)   return false;
+    for (int i = 0; i < vertexNum; i++){
+        bool clickThisCity = (vertices[i * 6] - clickloc.x) *  (vertices[i * 6] - clickloc.x) +  (vertices[i * 6 + 1] - clickloc.y) *  (vertices[i * 6 + 1] - clickloc.y) <= radius * radius;
+        if (!clickThisCity) continue;
+        if (startCityID == i){ // to cancel previous select
+            vertices[i * 6 + 3] = recorder.defaultCityColor[0];
+            vertices[i * 6 + 4] = recorder.defaultCityColor[1];
+            vertices[i * 6 + 5] = recorder.defaultCityColor[2];
+            startCityID = -1;
+        }else{
+            vertices[i * 6 + 3] = recorder.selectedCityColor[0];
+            vertices[i * 6 + 4] = recorder.selectedCityColor[1];
+            vertices[i * 6 + 5] = recorder.selectedCityColor[2];
+            if (startCityID < 0)
+                startCityID = i;
+            else{
+                recorder.toGenerateRoute = true;
+                recorder.startID = recorder.mapping(startCityID);
+                recorder.endID = recorder.mapping(i);
+                return true;
+            }
+        }
+        update();
+    }
+    return false;
+}
+Station::Station(int id,std::string neighborStr) :id(id){
+    int num = 0;
+    for (size_t i = 0; i < neighborStr.length(); i++){
+        if (neighborStr[i] == ','){
+            adj.push_back(num);
+            num = 0;
+        }
+        else
+            num = num * 10 + (int)(neighborStr[i] - 48);
+    }
+    adj.push_back(num);
+}
+void calcDirectLength(vector<Station>& stations,const Citys& citygroup){
+    Recorder& recorder = Recorder::getRecord();
+    for (vector<Station>::iterator station = stations.begin(); station != stations.end(); station++){
+        for (vector<int>::iterator orient = station->adj.begin(); orient != station->adj.end(); orient++){
+            station->length.push_back(citygroup.calcLength(recorder.mapping(station->getID()),recorder.mapping(*orient)));
+        }
+    }
+}
+bool checkWholeTic(){
+    Recorder& recorder = Recorder::getRecord();
+    double deltaTime = glfwGetTime() - recorder.startRoutingTIme;
+    int round = static_cast<int>(deltaTime * 100);
+    if (round == recorder.tickStep * 50) // move per half second
+        return true;
+    return false;
+}
+void solveThisCityPair(int startID,int endID,const vector<Station>& stations){
+    solveBasicPath(startID,endID,stations);
+    solvePrimPath(startID,endID,stations);
+    solveKruskalPath(startID,endID,stations);
+    Recorder& recorder = Recorder::getRecord();
+    recorder.startRoutingTIme = glfwGetTime();
+    recorder.tickStep = 1;
+}
+void solveBasicPath(const int startID,const int endID,const vector<Station>& stations){
+    vector<std::pair<int,int>> path;
+    path.clear();
+    
+}
+void solvePrimPath(const int startID,const int endID,const vector<Station>& stations){
+    using std::pair;
+    vector<pair<int,int>> path;
+    path.clear();
+    const size_t vertexNum = stations.size();
+    vector<int> minWeight(vertexNum, 1e9);
+    vector<int> prevID(vertexNum, -1);
+    vector<bool> inMST(vertexNum, false);
+    std::priority_queue<pair<float, int>, vector<pair<float, int>>, std::greater<pair<float, int>>> pq;
+    minWeight[startID] = 0;
+    pq.push({0.0f, startID});
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        pq.pop();
+        if (inMST[u]) continue;
+        inMST[u] = true;
+        const size_t adjNum = stations[u].adj.size();
+        for (size_t i = 0; i < adjNum; i++){
+            int v = stations[u].adj[i];
+            float length = stations[u].length[i];
+            if (!inMST[v] && length < minWeight[v]) {
+                minWeight[v] = length;
+                prevID[v] = u;
+                pq.push({length, v});
+            }
+        }
+    }
+    for (int at = endID; prevID[at] != -1; at = prevID[at])
+        path.push_back({at,prevID[at]});
+    std::reverse(path.begin(),path.end());
+    vector<Vertex> vertices;
+    Recorder& recorder = Recorder::getRecord();
+    for (vector<pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
+        vertices.push_back(Vertex(glm::vec3(route->first,route->second,0.0),recorder.primTrunkColor));
+    }
+    recorder.primPath = nullptr;
+    recorder.primPath = std::make_unique<Route>(vertices);
+}
+void solveKruskalPath(const int startID,const int endID,const vector<Station>& stations){
+    vector<std::pair<int,int>> path;
+    path.clear();
+    
+}
+void Route::draw() const{
+    shader ->use();
+    GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(thicknessLoc,0.025f);
+    glUniform1f(transparentLoc,1.0f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, step);
     glBindVertexArray(0);
 }
 }
