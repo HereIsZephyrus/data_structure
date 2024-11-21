@@ -209,7 +209,8 @@ int transport_main(){
         citygroup.draw();
         if (recorder.toGenerateRoute){
             bool toMoveStep = checkWholeTic();
-            if (toMoveStep)    ++recorder.tickStep;
+            if (toMoveStep)
+                ++recorder.tickStep;
             recorder.primPath->draw(recorder.tickStep);
         }
         glfwSwapBuffers(window);

@@ -205,8 +205,9 @@ public:
     }
     Recorder(const Recorder&) = delete;
     void operator=(const Recorder&) = delete;
-    std::map<int,int> mapID;
-    int mapping(int tomap) const {return mapID.at(tomap);}
+    std::map<int,int> mapTopo2Flat,mapFlat2Topo;
+    int mapping2Flat(int tomap) const {return mapTopo2Flat.at(tomap);}
+    int mapping2Topo(int topoint) const {return mapFlat2Topo.at(topoint);}
     bool toGenerateRoute,toCheckSelect;
     glm::vec2 clickLoc;
     int tickStep;
@@ -228,7 +229,7 @@ private:
     Recorder(){
         toGenerateRoute = false;
         toCheckSelect = false;
-        mapID.clear();
+        mapTopo2Flat.clear();
     }
 };
 void InitResource(GLFWwindow *& window);
@@ -250,14 +251,22 @@ public:
         const float sx = vertices[start * 6], tx = vertices[end * 6], sy = vertices[start * 6 + 1], ty = vertices[end * 6 + 1];
         return std::sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty));
     }
+    GLfloat getX(int index) const {return vertices[index * 6];}
+    GLfloat getY(int index) const {return vertices[index * 6 + 1];}
 };
 class Station{
     int id;
+    GLfloat x,y;
 public:
     vector<int> adj;
     vector<float> length;
+    Station():id(-1){}
     Station(int id,vector<int> adj) : id(id),adj(adj){}
     Station(int id,std::string neighborStr);
+    void setX(GLfloat xx) {x = xx;}
+    void setY(GLfloat yy) {y = yy;}
+    GLfloat getX() const{return x;}
+    GLfloat getY() const{return y;}
     int getID() const {return id;}
 };
 void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);

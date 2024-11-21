@@ -655,9 +655,9 @@ void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stat
         GDALClose(poDataset);
         return;
     }
+    stations.assign(layer->GetFeatureCount()+5,Station());
     OGRFeature *feature;
     Recorder& recorder = Recorder::getRecord();
-    int idNum = 0;
     while ((feature = layer->GetNextFeature()) != nullptr) {
         OGRGeometry* geometry = feature->GetGeometryRef();
         if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbMultiPoint) {
@@ -671,10 +671,11 @@ void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stat
                         y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
                         pointDataset.push_back(Vertex(glm::vec3(x,y,0),color));
                         std::string neighbors = std::string(feature->GetFieldAsString("neighbors"));
-                        std::cout<<neighbors<<std::endl;
-                        stations.push_back(Station(idNum,neighbors));
-                        recorder.mapID[idNum] = static_cast<int>(pointDataset.size())-1;
-                        idNum++;
+                        int ID = feature->GetFieldAsInteger("id");
+                        stations[ID] = Station(ID,neighbors);
+                        int pointNum = static_cast<int>(pointDataset.size())-1;
+                        recorder.mapTopo2Flat[ID] = pointNum;
+                        recorder.mapFlat2Topo[pointNum] = ID;
                     }
                 }
             }
@@ -700,7 +701,7 @@ void InitResource(GLFWwindow *& window){
     {
         pShader line (new Shader());
         line->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
-        line->attchShader(filePath("maze_line.gs"),GL_GEOMETRY_SHADER);
+        line->attchShader(filePath("transport_line.gs"),GL_GEOMETRY_SHADER);
         line->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
         line->linkProgram();
         ShaderBucket["line"] = std::move(line);
@@ -724,7 +725,7 @@ void Trunk::draw() const{
         shader ->use();
     GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
     GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
-    glUniform1f(thicknessLoc,0.002f);
+    glUniform1f(thicknessLoc,0.008f);
     glUniform1f(transparentLoc,0.8f);
     glBindVertexArray(VAO);
     glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
@@ -759,8 +760,9 @@ bool Citys::checkSelect(const glm::vec2& clickloc){
                 startCityID = i;
             else{
                 recorder.toGenerateRoute = true;
-                recorder.startID = recorder.mapping(startCityID);
-                recorder.endID = recorder.mapping(i);
+                recorder.startID = recorder.mapping2Topo(startCityID);
+                recorder.endID = recorder.mapping2Topo(i);
+                update();
                 return true;
             }
         }
@@ -769,34 +771,41 @@ bool Citys::checkSelect(const glm::vec2& clickloc){
     return false;
 }
 Station::Station(int id,std::string neighborStr) :id(id){
+    if (neighborStr.size() < 2) return;
     int num = 0;
     for (size_t i = 0; i < neighborStr.length(); i++){
         if (neighborStr[i] == ','){
-            adj.push_back(num);
+            if (num != 15)
+                adj.push_back(num);
             num = 0;
         }
         else
             num = num * 10 + (int)(neighborStr[i] - 48);
     }
-    adj.push_back(num);
+    if (num != 15)
+        adj.push_back(num);
 }
 void calcDirectLength(vector<Station>& stations,const Citys& citygroup){
     Recorder& recorder = Recorder::getRecord();
     for (vector<Station>::iterator station = stations.begin(); station != stations.end(); station++){
-        for (vector<int>::iterator orient = station->adj.begin(); orient != station->adj.end(); orient++){
-            station->length.push_back(citygroup.calcLength(recorder.mapping(station->getID()),recorder.mapping(*orient)));
-        }
+        if (station->getID() < 0)
+            continue;
+        station->setX(citygroup.getX(recorder.mapping2Flat(station->getID())));
+        station->setY(citygroup.getY(recorder.mapping2Flat(station->getID())));
+        for (vector<int>::iterator orient = station->adj.begin(); orient != station->adj.end(); orient++)
+            station->length.push_back(citygroup.calcLength(recorder.mapping2Flat(station->getID()),recorder.mapping2Flat(*orient)));
     }
 }
 bool checkWholeTic(){
     Recorder& recorder = Recorder::getRecord();
     double deltaTime = glfwGetTime() - recorder.startRoutingTIme;
     int round = static_cast<int>(deltaTime * 100);
-    if (round == recorder.tickStep * 50) // move per half second
+    if (round >= recorder.tickStep * 50) // move per half second
         return true;
     return false;
 }
 void solveThisCityPair(int startID,int endID,const vector<Station>& stations){
+    vector<std::pair<int,int>> path;
     solveBasicPath(startID,endID,stations);
     solvePrimPath(startID,endID,stations);
     solveKruskalPath(startID,endID,stations);
@@ -806,13 +815,11 @@ void solveThisCityPair(int startID,int endID,const vector<Station>& stations){
 }
 void solveBasicPath(const int startID,const int endID,const vector<Station>& stations){
     vector<std::pair<int,int>> path;
-    path.clear();
     
 }
 void solvePrimPath(const int startID,const int endID,const vector<Station>& stations){
     using std::pair;
     vector<pair<int,int>> path;
-    path.clear();
     const size_t vertexNum = stations.size();
     vector<int> minWeight(vertexNum, 1e9);
     vector<int> prevID(vertexNum, -1);
@@ -842,24 +849,30 @@ void solvePrimPath(const int startID,const int endID,const vector<Station>& stat
     vector<Vertex> vertices;
     Recorder& recorder = Recorder::getRecord();
     for (vector<pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
-        vertices.push_back(Vertex(glm::vec3(route->first,route->second,0.0),recorder.primTrunkColor));
+        const GLfloat sx = stations[route->first].getX();
+        const GLfloat sy = stations[route->first].getY();
+        const GLfloat tx = stations[route->second].getX();
+        const GLfloat ty = stations[route->second].getY();
+        //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
+        vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.primTrunkColor));
+        vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.primTrunkColor));
     }
     recorder.primPath = nullptr;
     recorder.primPath = std::make_unique<Route>(vertices);
 }
 void solveKruskalPath(const int startID,const int endID,const vector<Station>& stations){
     vector<std::pair<int,int>> path;
-    path.clear();
     
 }
 void Route::draw() const{
     shader ->use();
     GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
     GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
-    glUniform1f(thicknessLoc,0.025f);
+    glUniform1f(thicknessLoc,0.04f);
     glUniform1f(transparentLoc,1.0f);
     glBindVertexArray(VAO);
-    glDrawArrays(shape, 0, step);
+    size_t length = std::min(static_cast<size_t>(step * 2),vertexNum);
+    glDrawArrays(shape, 0, length);
     glBindVertexArray(0);
 }
 }
