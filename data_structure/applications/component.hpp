@@ -236,7 +236,20 @@ public:
 };
 class PrimSolver : public Solver{
     using pair = std::pair<float, int>;
-    std::priority_queue<pair, vector<pair>, std::greater<pair>> pq;
+    class MinHeapPriorityQueue {
+    private:
+        vector<pair> heap;
+        void heapifyUp(size_t index);
+        void heapifyDown(int index);
+    public:
+        MinHeapPriorityQueue() {}
+        bool empty() const {return heap.empty();}
+        pair top() const;
+        void push(pair value);
+        void pop();
+    };
+    //std::priority_queue<pair, vector<pair>, std::greater<pair>> pq;
+    MinHeapPriorityQueue pq;
     vector<float> minWeight;
     vector<int> prevID;
     vector<bool> inMST;

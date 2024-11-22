@@ -915,4 +915,45 @@ void DFSSolver::checkToSolve(int steptic,const vector<Station>& stations){
     recorder.dfsPath = nullptr;
     recorder.dfsPath = std::make_unique<Route>(vertices);
 }
+void PrimSolver::MinHeapPriorityQueue::heapifyUp(size_t index){
+    while (index > 0) {
+        size_t parent = (index - 1) / 2;
+        if (heap[index].first < heap[parent].first) {
+            std::swap(heap[index], heap[parent]);
+            index = parent;
+        } else
+            break;
+    }
+}
+void PrimSolver::MinHeapPriorityQueue::heapifyDown(int index){
+    int maxIndex = static_cast<int>(heap.size());
+    while (index < maxIndex) {
+        int left = 2 * index + 1,right = 2 * index + 2;
+        int smallest = index;
+        if (left < maxIndex && heap[left].first < heap[smallest].first)
+            smallest = left;
+        if (right < maxIndex && heap[right].first < heap[smallest].first)
+            smallest = right;
+        if (smallest == index)
+            break;
+        std::swap(heap[index], heap[smallest]);
+        index = smallest;
+    }
+}
+void PrimSolver::MinHeapPriorityQueue::pop() {
+    if (empty())
+        throw std::runtime_error("Priority Queue is empty");
+    heap[0] = heap.back();
+    heap.pop_back();
+    heapifyDown(0);
+}
+void PrimSolver::MinHeapPriorityQueue::push(std::pair<float, int> value) {
+    heap.push_back(value);
+    heapifyUp(heap.size() - 1);
+}
+std::pair<float, int> PrimSolver::MinHeapPriorityQueue::top() const {
+    if (empty())
+        throw std::runtime_error("Priority Queue is empty");
+    return heap[0];
+}
 }
