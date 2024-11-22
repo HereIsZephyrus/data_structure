@@ -9,6 +9,10 @@
 #define component_hpp
 #include <vector>
 #include <map>
+#include <gdal.h>
+#include <gdal_priv.h>
+#include <gdal_utils.h>
+#include <ogrsf_frmts.h>
 #include "../OpenGL/graphing.hpp"
 #include "../ADT/tree.hpp"
 namespace maze{
@@ -125,7 +129,6 @@ public:
     Primitive(ballVertex,GL_POINT,ShaderBucket["ball"].get()),radius(r),color(c){}
     void draw() const override;
     void draw(double timetic);
-    void update();
     GLfloat& getX(GLuint num){return vertices[num * 6];}
     GLfloat& getY(GLuint num){return vertices[num * 6 + 1];}
 private:
@@ -181,5 +184,154 @@ void BasicCollideSearch(unsigned long long& counter);
 void SpatialIndexCollideSeach(std::shared_ptr<IndexTree> indexTree,unsigned long long& counter);
 void BuildIndexTree(std::shared_ptr<IndexTree> indexTree);
 void DrawGUI(unsigned long long counter);
+}
+
+namespace transport {
+using std::vector;
+using std::string;
+void mouseCallback(GLFWwindow* window, int button, int action, int mods);
+class Route : public Primitive{
+public:
+    Route(const vector<Vertex>& vertices):Primitive(vertices, GL_LINES, ShaderBucket["route"].get()){}
+    void draw() const override;
+};
+class Citys : public Primitive{
+    static constexpr float radius = 0.015f;
+    int startCityID;
+public:
+    Citys(const std::vector<Vertex>& ballVertices):
+    Primitive(ballVertices,GL_POINTS,ShaderBucket["city"].get()),startCityID(-1){}
+    void draw() const override;
+    bool checkSelect(const glm::vec2& clickloc);
+    float calcLength(int start,int end) const{
+        const float sx = vertices[start * 6], tx = vertices[end * 6], sy = vertices[start * 6 + 1], ty = vertices[end * 6 + 1];
+        return std::sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty));
+    }
+    GLfloat getX(int index) const {return vertices[index * 6];}
+    GLfloat getY(int index) const {return vertices[index * 6 + 1];}
+};
+class Station{
+    int id;
+    GLfloat x,y;
+public:
+    vector<int> adj;
+    vector<float> length;
+    Station():id(-1){}
+    Station(int id,vector<int> adj) : id(id),adj(adj){}
+    Station(int id,std::string neighborStr);
+    void setX(GLfloat xx) {x = xx;}
+    void setY(GLfloat yy) {y = yy;}
+    GLfloat getX() const{return x;}
+    GLfloat getY() const{return y;}
+    int getID() const {return id;}
+};
+class Solver{
+protected:
+    size_t vertexNum;
+    int startID,endID;
+    int step;
+public:
+    Solver(size_t num,int start,int end):vertexNum(num),startID(start),endID(end),step(0){}
+    virtual void checkToSolve(int steptic,const vector<Station>& stations) = 0;
+};
+class PrimSolver : public Solver{
+    using pair = std::pair<float, int>;
+    class MinHeapPriorityQueue {
+    private:
+        vector<pair> heap;
+        void heapifyUp(size_t index);
+        void heapifyDown(int index);
+    public:
+        MinHeapPriorityQueue() {}
+        bool empty() const {return heap.empty();}
+        pair top() const;
+        void push(pair value);
+        void pop();
+    };
+    //std::priority_queue<pair, vector<pair>, std::greater<pair>> pq;
+    MinHeapPriorityQueue pq;
+    vector<float> minWeight;
+    vector<int> prevID;
+    vector<bool> inMST;
+public:
+    PrimSolver(size_t num,int start,int end):Solver(num,start,end){
+        minWeight.assign(vertexNum, 1e9);
+        prevID.assign(vertexNum, -1);
+        inMST.assign(vertexNum,false);
+        minWeight[startID] = 0;
+        pq.push({0.0f, startID});
+    }
+    void checkToSolve(int steptic,const vector<Station>& stations) override;
+};
+class DFSSolver : public Solver{
+    float minWeight;
+    int step;
+    struct StackPath{
+        float weight;
+        vector<int> trace;
+    };
+    std::stack<StackPath> searchingPath;
+    bool notInTrace(const vector<int>& trace,int node){
+        for (vector<int>::const_iterator p = trace.begin(); p != trace.end(); p++)
+            if (*p == node)
+                return false;
+        return true;
+    }
+public:
+    DFSSolver(size_t num,int start,int end):Solver(num,start,end){
+        minWeight = 1e9;
+        searchingPath.push({0.0f,{startID}});
+    }
+    void checkToSolve(int steptic,const vector<Station>& stations) override;
+};
+class Recorder{
+public:
+    static Recorder& getRecord(){
+        static Recorder instance;
+        return instance;
+    }
+    Recorder(const Recorder&) = delete;
+    void operator=(const Recorder&) = delete;
+    std::map<int,int> mapTopo2Flat,mapFlat2Topo;
+    int mapping2Flat(int tomap) const {return mapTopo2Flat.at(tomap);}
+    int mapping2Topo(int topoint) const {return mapFlat2Topo.at(topoint);}
+    bool toGenerateRoute,toCheckSelect;
+    glm::vec2 clickLoc;
+    int tickStep;
+    int startID,endID;
+    double startRoutingTIme;
+    std::unique_ptr<Route> dfsPath,primPath;
+    std::unique_ptr<Solver> primSolver,dfsSolver;
+    static constexpr glm::vec3 defaultTrunkColor = glm::vec3(1.0,1.0,1.0);
+    static constexpr glm::vec3 basicTrunkColor = glm::vec3(1.0,0.0,0.0);//red
+    static constexpr glm::vec3 primTrunkColor = glm::vec3(0.0,1.0,0.0);//green
+    static constexpr glm::vec3 kruskalTrunkColor = glm::vec3(1.0,0.0,1.0);//purple
+    static constexpr glm::vec3 defaultCityColor  = glm::vec3(0.0,0.0,1.0);
+    static constexpr glm::vec3 selectedCityColor = glm::vec3(1.0,0.0,1.0);
+    static constexpr double maxCoodx = 135.0;
+    static constexpr double minCoodx = 75.0;
+    static constexpr double maxCoody = 54.0;
+    static constexpr double minCoody = 18.0;
+private:
+    Recorder(){
+        toGenerateRoute = false;
+        toCheckSelect = false;
+        mapTopo2Flat.clear();
+        primSolver = nullptr;
+        dfsSolver = nullptr;
+    }
+};
+void InitResource(GLFWwindow *& window);
+class Trunk : public Primitive{
+public:
+    Trunk(const std::vector<Vertex>& arrowVertex):
+    Primitive(arrowVertex,GL_LINES,ShaderBucket["line"].get()){}
+    void draw() const override;
+};
+void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color);
+void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stations,string resourcename,const glm::vec3 color);
+void calcDirectLength(vector<Station>& stations,const Citys& citygroup);
+bool checkWholeTic();
+void InitSolvers(int startID,int endID,const vector<Station>& stations);
 }
 #endif /* component_hpp */

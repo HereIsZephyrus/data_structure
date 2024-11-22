@@ -20,9 +20,11 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "gdal.h"
 
 int maze_main();
 int binarytree_main();
+int transport_main();
 int main(int argc, char **argv){
     if (argc == 1){
         ::testing::InitGoogleTest(&argc, argv);
@@ -44,6 +46,9 @@ int main(int argc, char **argv){
     }else if (program_type == "binarytree"){
         std::cout<<"binarytree"<<std::endl;
         binarytree_main();
+    }else if (program_type == "transport"){
+        std::cout<<"transport"<<std::endl;
+        transport_main();
     }
     return 0;
 }
@@ -165,4 +170,55 @@ int binarytree_main(){
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
+}
+
+int transport_main(){
+    using namespace transport;
+    GLFWwindow *& window = WindowParas::getInstance().window;
+    Recorder& recorder = Recorder::getRecord();
+    if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-高铁最短路") != 0)
+        return -1;
+    InitResource(window);
+    GDALAllRegister();
+    std::string geojsonFolder = "/Users/channingtong/Program/data_structure/data_structure/GeoResource/";
+    std::string cityPath = geojsonFolder + "city.geojson";
+    std::string trunkPath = geojsonFolder + "trunk.geojson";
+    vector<vector<Vertex>> trunkPoints;
+    vector<Vertex> cityPoints;
+    vector<Station> stations;
+    loadLineGeoJsonResource(trunkPoints,trunkPath,recorder.defaultTrunkColor);
+    loadPointGeoJsonResource(cityPoints,stations,cityPath,recorder.defaultCityColor);
+    vector<std::unique_ptr<Trunk>> trunks;
+    for (vector<vector<Vertex>>::iterator trunkPoint = trunkPoints.begin(); trunkPoint != trunkPoints.end(); trunkPoint++){
+        trunks.push_back(std::make_unique<Trunk>(*trunkPoint));
+    }
+    Citys citygroup = Citys(cityPoints);
+    calcDirectLength(stations,citygroup);
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        glClearColor(0,0,0,0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for (vector<std::unique_ptr<Trunk>>::iterator trunk = trunks.begin(); trunk != trunks.end(); trunk++)
+            (*trunk)->draw();
+        if (recorder.toCheckSelect){
+            recorder.toCheckSelect = false;
+            bool toSolve = citygroup.checkSelect(recorder.clickLoc);
+            if (toSolve)
+                InitSolvers(recorder.startID,recorder.endID,stations);
+        }
+        citygroup.draw();
+        if (recorder.toGenerateRoute){
+            bool toMoveStep = checkWholeTic();
+            if (toMoveStep)
+                ++recorder.tickStep;
+            recorder.dfsSolver->checkToSolve(recorder.tickStep, stations);
+            recorder.dfsPath->draw();
+            recorder.primSolver->checkToSolve(recorder.tickStep, stations);
+            recorder.primPath->draw();
+        }
+        glfwSwapBuffers(window);
+    }
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return  0;
 }

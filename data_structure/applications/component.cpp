@@ -336,19 +336,6 @@ void Ball::draw(double timetic){
     glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
     glBindVertexArray(0);
 }
-void Ball::update(){
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexNum * 6, vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*stride, (GLvoid*)(sizeof(GLfloat) * 3));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
 bool BallPara::move(){
     const GLfloat rawX = x, rawY = y;
     x += timeRatio * v.vx;
@@ -607,5 +594,366 @@ void DrawGUI(unsigned long long counter){
         recorder.restartTime = glfwGetTime();
     }
     End();
+}
+}
+
+namespace transport{
+using std::vector;
+using std::string;
+void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourcename,const glm::vec3 color){
+    GDALDataset* poDataset = (GDALDataset*) GDALOpenEx(resourcename.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if (poDataset == nullptr) {
+        std::cerr << "Failed to open GeoJSON file: " << resourcename << std::endl;
+        return;
+    }
+    OGRLayer* layer = poDataset->GetLayer(0);
+    if (layer == nullptr) {
+        std::cerr << "Failed to get layer from GeoJSON." << std::endl;
+        GDALClose(poDataset);
+        return;
+    }
+    OGRFeature *feature;
+    Recorder& recorder = Recorder::getRecord();
+    while ((feature = layer->GetNextFeature()) != nullptr) {
+        OGRGeometry* geometry = feature->GetGeometryRef();
+        if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbMultiLineString) {
+            OGRMultiLineString* multiLineString = dynamic_cast<OGRMultiLineString*>(geometry);
+            if (multiLineString != nullptr) {
+                vector<Vertex> resLine;
+                for (int i = 0; i < multiLineString->getNumGeometries(); i++) {
+                    OGRLineString* lineString = dynamic_cast<OGRLineString*>(multiLineString->getGeometryRef(i));
+                    if (lineString != nullptr) {
+                        for (int j = 0; j < lineString->getNumPoints(); j++){
+                            OGRPoint point;
+                            lineString->getPoint(j, &point);
+                            double x = point.getX(), y = point.getY();
+                            x = 2 * (x - recorder.minCoodx) / (recorder.maxCoodx - recorder.minCoodx) - 1;
+                            y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
+                            resLine.push_back(Vertex(glm::vec3(x,y,0),color));
+                            if (j != 0 && j != lineString->getNumPoints()-1)
+                                resLine.push_back(Vertex(glm::vec3(x,y,0),color));
+                            // double insert to show multi string. OpenGL type is line
+                        }
+                    }
+                }
+                pointDataset.push_back(resLine);
+            }
+        }
+        OGRFeature::DestroyFeature(feature);
+    }
+    GDALClose(poDataset);
+}
+void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stations,string resourcename,const glm::vec3 color){
+    GDALDataset* poDataset = (GDALDataset*) GDALOpenEx(resourcename.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if (poDataset == nullptr) {
+        std::cerr << "Failed to open GeoJSON file: " << resourcename << std::endl;
+        return;
+    }
+    OGRLayer* layer = poDataset->GetLayer(0);
+    if (layer == nullptr) {
+        std::cerr << "Failed to get layer from GeoJSON." << std::endl;
+        GDALClose(poDataset);
+        return;
+    }
+    stations.assign(layer->GetFeatureCount()+5,Station());
+    OGRFeature *feature;
+    Recorder& recorder = Recorder::getRecord();
+    while ((feature = layer->GetNextFeature()) != nullptr) {
+        OGRGeometry* geometry = feature->GetGeometryRef();
+        if (geometry != nullptr && wkbFlatten(geometry->getGeometryType()) == wkbMultiPoint) {
+            OGRMultiPoint* multiPoint = dynamic_cast<OGRMultiPoint*>(geometry);
+            if (multiPoint != nullptr){
+                for (int i = 0; i < multiPoint->getNumGeometries(); ++i) {
+                    OGRPoint* point = dynamic_cast<OGRPoint*>(multiPoint->getGeometryRef(i));
+                    if (point != nullptr) {
+                        double x = point->getX(), y = point->getY();
+                        x = 2 * (x - recorder.minCoodx) / (recorder.maxCoodx - recorder.minCoodx) - 1;
+                        y = 2 * (y - recorder.minCoody) / (recorder.maxCoody - recorder.minCoody) - 1;
+                        pointDataset.push_back(Vertex(glm::vec3(x,y,0),color));
+                        std::string neighbors = std::string(feature->GetFieldAsString("neighbors"));
+                        int ID = feature->GetFieldAsInteger("id");
+                        stations[ID] = Station(ID,neighbors);
+                        int pointNum = static_cast<int>(pointDataset.size())-1;
+                        recorder.mapTopo2Flat[ID] = pointNum;
+                        recorder.mapFlat2Topo[pointNum] = ID;
+                    }
+                }
+            }
+        }
+        OGRFeature::DestroyFeature(feature);
+    }
+    GDALClose(poDataset);
+}
+void mouseCallback(GLFWwindow* window, int button, int action, int mods){
+    Recorder& recorder = Recorder::getRecord();
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS ){
+        WindowParas& windowPara = WindowParas::getInstance();
+        GLdouble xpos,ypos;
+        glfwGetCursorPos(windowPara.window, &xpos, &ypos);
+        recorder.toCheckSelect = true;
+        recorder.clickLoc = glm::vec2(windowPara.screen2normalX(xpos),windowPara.screen2normalY(ypos));
+    }
+}
+void InitResource(GLFWwindow *& window){
+    //glfwSetKeyCallback(window, keyCallback);
+    glfwSetMouseButtonCallback(window, mouseCallback);
+    //glfwSetCursorPosCallback(window, cursorCallback);
+    {
+        pShader line (new Shader());
+        line->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        line->attchShader(filePath("transport_line.gs"),GL_GEOMETRY_SHADER);
+        line->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        line->linkProgram();
+        ShaderBucket["line"] = std::move(line);
+    }
+    {
+        pShader route (new Shader());
+        route->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        route->attchShader(filePath("transport_route.gs"),GL_GEOMETRY_SHADER);
+        route->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        route->linkProgram();
+        ShaderBucket["route"] = std::move(route);
+    }
+    {
+        pShader city (new Shader());
+        city->attchShader(filePath("vertices.vs"),GL_VERTEX_SHADER);
+        city->attchShader(filePath("binarytree_ball.gs"),GL_GEOMETRY_SHADER);
+        city->attchShader(filePath("line.frag"),GL_FRAGMENT_SHADER);
+        city->linkProgram();
+        ShaderBucket["city"] = std::move(city);
+    }
+    srand((unsigned int)time(0));
+}
+void Trunk::draw() const{
+    if (shader == nullptr){
+        std::cerr<<"havn't bind shader"<<std::endl;
+        return;
+    }
+    else
+        shader ->use();
+    GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(thicknessLoc,0.008f);
+    glUniform1f(transparentLoc,0.8f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
+void Citys::draw() const{
+    shader ->use();
+    GLuint radiusLoc = glGetUniformLocation(shader->program, "radius");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(radiusLoc,radius);
+    glUniform1f(transparentLoc,1.0f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
+bool Citys::checkSelect(const glm::vec2& clickloc){
+    Recorder& recorder = Recorder::getRecord();
+    if (recorder.toGenerateRoute)   return false;
+    for (int i = 0; i < vertexNum; i++){
+        bool clickThisCity = (vertices[i * 6] - clickloc.x) *  (vertices[i * 6] - clickloc.x) +  (vertices[i * 6 + 1] - clickloc.y) *  (vertices[i * 6 + 1] - clickloc.y) <= radius * radius;
+        if (!clickThisCity) continue;
+        if (startCityID == i){ // to cancel previous select
+            vertices[i * 6 + 3] = recorder.defaultCityColor[0];
+            vertices[i * 6 + 4] = recorder.defaultCityColor[1];
+            vertices[i * 6 + 5] = recorder.defaultCityColor[2];
+            startCityID = -1;
+        }else{
+            vertices[i * 6 + 3] = recorder.selectedCityColor[0];
+            vertices[i * 6 + 4] = recorder.selectedCityColor[1];
+            vertices[i * 6 + 5] = recorder.selectedCityColor[2];
+            if (startCityID < 0)
+                startCityID = i;
+            else{
+                recorder.toGenerateRoute = true;
+                recorder.startID = recorder.mapping2Topo(startCityID);
+                recorder.endID = recorder.mapping2Topo(i);
+                update();
+                return true;
+            }
+        }
+        update();
+    }
+    return false;
+}
+Station::Station(int id,std::string neighborStr) :id(id){
+    if (neighborStr.size() < 2) return;
+    int num = 0;
+    for (size_t i = 0; i < neighborStr.length(); i++){
+        if (neighborStr[i] == ','){
+            if (num != 15)
+                adj.push_back(num);
+            num = 0;
+        }
+        else
+            num = num * 10 + (int)(neighborStr[i] - 48);
+    }
+    if (num != 15)
+        adj.push_back(num);
+}
+void calcDirectLength(vector<Station>& stations,const Citys& citygroup){
+    Recorder& recorder = Recorder::getRecord();
+    for (vector<Station>::iterator station = stations.begin(); station != stations.end(); station++){
+        if (station->getID() < 0)
+            continue;
+        station->setX(citygroup.getX(recorder.mapping2Flat(station->getID())));
+        station->setY(citygroup.getY(recorder.mapping2Flat(station->getID())));
+        for (vector<int>::iterator orient = station->adj.begin(); orient != station->adj.end(); orient++)
+            station->length.push_back(citygroup.calcLength(recorder.mapping2Flat(station->getID()),recorder.mapping2Flat(*orient)));
+    }
+}
+bool checkWholeTic(){
+    Recorder& recorder = Recorder::getRecord();
+    double deltaTime = glfwGetTime() - recorder.startRoutingTIme;
+    int round = static_cast<int>(deltaTime * 100);
+    if (round >= recorder.tickStep * 50) // move per half second
+        return true;
+    return false;
+}
+void InitSolvers(int startID,int endID,const vector<Station>& stations){
+    size_t vertexNum = stations.size();
+    Recorder& recorder = Recorder::getRecord();
+    recorder.primSolver = std::make_unique<PrimSolver>(vertexNum,startID,endID);
+    recorder.dfsSolver = std::make_unique<DFSSolver>(vertexNum,startID,endID);
+    recorder.startRoutingTIme = glfwGetTime();
+    recorder.tickStep = 1;
+}
+void Route::draw() const{
+    shader ->use();
+    GLuint thicknessLoc = glGetUniformLocation(shader->program, "thickness");
+    GLuint transparentLoc = glGetUniformLocation(shader->program, "transparent");
+    glUniform1f(thicknessLoc,0.04f);
+    glUniform1f(transparentLoc,1.0f);
+    glBindVertexArray(VAO);
+    glDrawArrays(shape, 0, static_cast<GLsizei>(vertexNum));
+    glBindVertexArray(0);
+}
+void PrimSolver::checkToSolve(int steptic,const vector<Station>& stations){
+    if (steptic <= step || step == -1)
+        return;
+    ++step;
+    Recorder& recorder = Recorder::getRecord();
+    vector<std::pair<int,int>> path;
+    vector<Vertex> vertices;
+    if (!pq.empty()){
+        int u = pq.top().second;
+        pq.pop();
+        for (int at = u; prevID[at] != -1; at = prevID[at])
+            path.push_back({at,prevID[at]});
+        if (u == endID)
+            step = -1;
+        else if (!inMST[u]){
+            inMST[u] = true;
+            const size_t adjNum = stations[u].adj.size();
+            for (size_t i = 0; i < adjNum; i++){
+                int v = stations[u].adj[i];
+                float newLength = minWeight[u] + stations[u].length[i];
+                if (!inMST[v] && newLength < minWeight[v]) {
+                    minWeight[v] = newLength;
+                    prevID[v] = u;
+                    pq.push({newLength, v});
+                    path.push_back({v,prevID[v]});
+                }
+            }
+        }
+    }
+    std::reverse(path.begin(),path.end());
+    for (vector<std::pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
+        const GLfloat sx = stations[route->second].getX();
+        const GLfloat sy = stations[route->second].getY();
+        const GLfloat tx = stations[route->first].getX();
+        const GLfloat ty = stations[route->first].getY();
+        //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
+        vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.primTrunkColor));
+        vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.primTrunkColor));
+    }
+    recorder.primPath = nullptr;
+    recorder.primPath = std::make_unique<Route>(vertices);
+}
+void DFSSolver::checkToSolve(int steptic,const vector<Station>& stations){
+    if (steptic <= step || step == -1)
+        return;
+    ++step;
+    Recorder& recorder = Recorder::getRecord();
+    vector<std::pair<int,int>> path;
+    vector<Vertex> vertices;
+    if (searchingPath.empty()){
+        step = -1;
+        return;
+    }
+    vector<int> trace = searchingPath.top().trace;
+    int u = trace.back();
+    float weight = searchingPath.top().weight;
+    for (vector<int>::iterator node = trace.begin(); (node+1) != trace.end(); node++)
+        path.push_back({*node,*(node+1)});
+    searchingPath.pop();
+    if (u == endID)
+        minWeight = std::min(minWeight,weight);
+    else if (weight <= minWeight){ // cut
+        const size_t adjNum = stations[u].adj.size();
+        for (size_t i = 0; i < adjNum; i++){
+            int v = stations[u].adj[i];
+            if (notInTrace(trace,v)) {
+                vector<int> newTrace = trace;
+                newTrace.push_back(v);
+                searchingPath.push({minWeight + stations[u].length[i], newTrace});
+                path.push_back({u,v});
+            }
+        }
+    }
+    for (vector<std::pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
+        const GLfloat sx = stations[route->first].getX();
+        const GLfloat sy = stations[route->first].getY();
+        const GLfloat tx = stations[route->second].getX();
+        const GLfloat ty = stations[route->second].getY();
+        //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
+        vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.basicTrunkColor));
+        vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.basicTrunkColor));
+    }
+    recorder.dfsPath = nullptr;
+    recorder.dfsPath = std::make_unique<Route>(vertices);
+}
+void PrimSolver::MinHeapPriorityQueue::heapifyUp(size_t index){
+    while (index > 0) {
+        size_t parent = (index - 1) / 2;
+        if (heap[index].first < heap[parent].first) {
+            std::swap(heap[index], heap[parent]);
+            index = parent;
+        } else
+            break;
+    }
+}
+void PrimSolver::MinHeapPriorityQueue::heapifyDown(int index){
+    int maxIndex = static_cast<int>(heap.size());
+    while (index < maxIndex) {
+        int left = 2 * index + 1,right = 2 * index + 2;
+        int smallest = index;
+        if (left < maxIndex && heap[left].first < heap[smallest].first)
+            smallest = left;
+        if (right < maxIndex && heap[right].first < heap[smallest].first)
+            smallest = right;
+        if (smallest == index)
+            break;
+        std::swap(heap[index], heap[smallest]);
+        index = smallest;
+    }
+}
+void PrimSolver::MinHeapPriorityQueue::pop() {
+    if (empty())
+        throw std::runtime_error("Priority Queue is empty");
+    heap[0] = heap.back();
+    heap.pop_back();
+    heapifyDown(0);
+}
+void PrimSolver::MinHeapPriorityQueue::push(std::pair<float, int> value) {
+    heap.push_back(value);
+    heapifyUp(heap.size() - 1);
+}
+std::pair<float, int> PrimSolver::MinHeapPriorityQueue::top() const {
+    if (empty())
+        throw std::runtime_error("Priority Queue is empty");
+    return heap[0];
 }
 }

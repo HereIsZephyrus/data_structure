@@ -52,6 +52,7 @@ public:
     }
     virtual void draw() const;
     friend binarytree::BallPara;
+    void update();
 protected:
     GLuint VAO,VBO;
     Shader* shader;
