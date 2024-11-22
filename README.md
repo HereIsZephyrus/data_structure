@@ -15,7 +15,6 @@ C++ / OpenGL项目.
 | gtest | 1.15.2 | 1.13.0 | 提供单元测试框架|
 | benchmark | 1.9.0 | 1.8.1 | 提供性能测试框架|
 | gdal | 3.9.3 | 3.8.0 | 提供地理数据读写接口 |
-| cgal | 6.0.1 | 6.0.0 | 提供各类计算几何方法 |
 
 使用Dear ImGui进行GUI绘制,该GUI引擎无依赖.
 
@@ -32,4 +31,10 @@ C++ / OpenGL项目.
 
 <p align="center">
     <img src="https://github.com/HereIsZephyrus/zephyrus.img/blob/main/images/blog/collision_animation_renew.gif" alt="collision" />
+</p>
+
+3. 数据结构实习3: 省会高铁最短路径
+
+<p align="center">
+    <img src="https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/data_structure_transport.gif" alt="collision" />
 </p>

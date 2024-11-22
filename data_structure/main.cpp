@@ -211,6 +211,8 @@ int transport_main(){
             bool toMoveStep = checkWholeTic();
             if (toMoveStep)
                 ++recorder.tickStep;
+            recorder.dfsSolver->checkToSolve(recorder.tickStep, stations);
+            recorder.dfsPath->draw();
             recorder.primSolver->checkToSolve(recorder.tickStep, stations);
             recorder.primPath->draw();
         }

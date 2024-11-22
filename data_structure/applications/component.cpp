@@ -816,58 +816,9 @@ void InitSolvers(int startID,int endID,const vector<Station>& stations){
     size_t vertexNum = stations.size();
     Recorder& recorder = Recorder::getRecord();
     recorder.primSolver = std::make_unique<PrimSolver>(vertexNum,startID,endID);
+    recorder.dfsSolver = std::make_unique<DFSSolver>(vertexNum,startID,endID);
     recorder.startRoutingTIme = glfwGetTime();
     recorder.tickStep = 1;
-}
-void solveBasicPath(const int startID,const int endID,const vector<Station>& stations){
-    Recorder& recorder = Recorder::getRecord();
-}
-void solvePrimPath(const int startID,const int endID,const vector<Station>& stations){
-    using std::pair;
-    const size_t vertexNum = stations.size();
-    vector<int> minWeight(vertexNum, 1e9);
-    vector<int> prevID(vertexNum, -1);
-    vector<bool> inMST(vertexNum, false);
-    std::priority_queue<pair<float, int>, vector<pair<float, int>>, std::greater<pair<float, int>>> pq;
-    minWeight[startID] = 0;
-    pq.push({0.0f, startID});
-    while (!pq.empty()) {
-        int u = pq.top().second;
-        pq.pop();
-        if (inMST[u]) continue;
-        inMST[u] = true;
-        const size_t adjNum = stations[u].adj.size();
-        for (size_t i = 0; i < adjNum; i++){
-            int v = stations[u].adj[i];
-            float length = stations[u].length[i];
-            if (!inMST[v] && length < minWeight[v]) {
-                minWeight[v] = length;
-                prevID[v] = u;
-                pq.push({length, v});
-                vector<pair<int,int>> path;
-                vector<Vertex> vertices;
-                for (int at = v; prevID[at] != -1; at = prevID[at])
-                    path.push_back({at,prevID[at]});
-                std::reverse(path.begin(),path.end());
-                Recorder& recorder = Recorder::getRecord();
-                for (vector<pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
-                    const GLfloat sx = stations[route->second].getX();
-                    const GLfloat sy = stations[route->second].getY();
-                    const GLfloat tx = stations[route->first].getX();
-                    const GLfloat ty = stations[route->first].getY();
-                    //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
-                    vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.primTrunkColor));
-                    vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.primTrunkColor));
-                }
-                recorder.primPath = nullptr;
-                recorder.primPath = std::make_unique<Route>(vertices);
-            }
-        }
-    }
-}
-void solveKruskalPath(const int startID,const int endID,const vector<Station>& stations){
-    vector<std::pair<int,int>> path;
-    
 }
 void Route::draw() const{
     shader ->use();
@@ -889,29 +840,24 @@ void PrimSolver::checkToSolve(int steptic,const vector<Station>& stations){
     if (!pq.empty()){
         int u = pq.top().second;
         pq.pop();
-        if (!inMST[u]){
+        for (int at = u; prevID[at] != -1; at = prevID[at])
+            path.push_back({at,prevID[at]});
+        if (u == endID)
+            step = -1;
+        else if (!inMST[u]){
             inMST[u] = true;
             const size_t adjNum = stations[u].adj.size();
             for (size_t i = 0; i < adjNum; i++){
                 int v = stations[u].adj[i];
-                float length = stations[u].length[i];
-                if (!inMST[v] && length < minWeight[v]) {
-                    minWeight[v] = length;
+                float newLength = minWeight[u] + stations[u].length[i];
+                if (!inMST[v] && newLength < minWeight[v]) {
+                    minWeight[v] = newLength;
                     prevID[v] = u;
-                    pq.push({length, v});
-                    for (int at = v; prevID[at] != -1; at = prevID[at])
-                        path.push_back({at,prevID[at]});
+                    pq.push({newLength, v});
+                    path.push_back({v,prevID[v]});
                 }
             }
         }
-        if (path.empty())
-            for (int at = u; prevID[at] != -1; at = prevID[at])
-                path.push_back({at,prevID[at]});
-    }
-    else{//finish search
-        for (int at = endID; prevID[at] != -1; at = prevID[at])
-            path.push_back({at,prevID[at]});
-        step = -1;
     }
     std::reverse(path.begin(),path.end());
     for (vector<std::pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
@@ -925,5 +871,48 @@ void PrimSolver::checkToSolve(int steptic,const vector<Station>& stations){
     }
     recorder.primPath = nullptr;
     recorder.primPath = std::make_unique<Route>(vertices);
+}
+void DFSSolver::checkToSolve(int steptic,const vector<Station>& stations){
+    if (steptic <= step || step == -1)
+        return;
+    ++step;
+    Recorder& recorder = Recorder::getRecord();
+    vector<std::pair<int,int>> path;
+    vector<Vertex> vertices;
+    if (searchingPath.empty()){
+        step = -1;
+        return;
+    }
+    vector<int> trace = searchingPath.top().trace;
+    int u = trace.back();
+    float weight = searchingPath.top().weight;
+    for (vector<int>::iterator node = trace.begin(); (node+1) != trace.end(); node++)
+        path.push_back({*node,*(node+1)});
+    searchingPath.pop();
+    if (u == endID)
+        minWeight = std::min(minWeight,weight);
+    else if (weight <= minWeight){ // cut
+        const size_t adjNum = stations[u].adj.size();
+        for (size_t i = 0; i < adjNum; i++){
+            int v = stations[u].adj[i];
+            if (notInTrace(trace,v)) {
+                vector<int> newTrace = trace;
+                newTrace.push_back(v);
+                searchingPath.push({minWeight + stations[u].length[i], newTrace});
+                path.push_back({u,v});
+            }
+        }
+    }
+    for (vector<std::pair<int,int>>::const_iterator route = path.begin(); route != path.end(); route++){
+        const GLfloat sx = stations[route->first].getX();
+        const GLfloat sy = stations[route->first].getY();
+        const GLfloat tx = stations[route->second].getX();
+        const GLfloat ty = stations[route->second].getY();
+        //std::cout<<'('<<sx<<','<<sy<<')'<<"->"<<'('<<tx<<','<<ty<<')'<<std::endl;
+        vertices.push_back(Vertex(glm::vec3(sx,sy,0.0),recorder.basicTrunkColor));
+        vertices.push_back(Vertex(glm::vec3(tx,ty,0.0),recorder.basicTrunkColor));
+    }
+    recorder.dfsPath = nullptr;
+    recorder.dfsPath = std::make_unique<Route>(vertices);
 }
 }

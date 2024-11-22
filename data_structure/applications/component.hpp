@@ -225,25 +225,51 @@ public:
     GLfloat getY() const{return y;}
     int getID() const {return id;}
 };
-class PrimSolver{
-    using pair = std::pair<float, int>;
-    std::priority_queue<pair, vector<pair>, std::greater<pair>> pq;
-    vector<int> minWeight;
-    vector<int> prevID;
-    vector<bool> inMST;
+class Solver{
+protected:
     size_t vertexNum;
     int startID,endID;
     int step;
 public:
-    PrimSolver(size_t num,int start,int end)
-        :vertexNum(num),startID(start),endID(end),step(0){
+    Solver(size_t num,int start,int end):vertexNum(num),startID(start),endID(end),step(0){}
+    virtual void checkToSolve(int steptic,const vector<Station>& stations) = 0;
+};
+class PrimSolver : public Solver{
+    using pair = std::pair<float, int>;
+    std::priority_queue<pair, vector<pair>, std::greater<pair>> pq;
+    vector<float> minWeight;
+    vector<int> prevID;
+    vector<bool> inMST;
+public:
+    PrimSolver(size_t num,int start,int end):Solver(num,start,end){
         minWeight.assign(vertexNum, 1e9);
         prevID.assign(vertexNum, -1);
         inMST.assign(vertexNum,false);
         minWeight[startID] = 0;
         pq.push({0.0f, startID});
     }
-    void checkToSolve(int steptic,const vector<Station>& stations);
+    void checkToSolve(int steptic,const vector<Station>& stations) override;
+};
+class DFSSolver : public Solver{
+    float minWeight;
+    int step;
+    struct StackPath{
+        float weight;
+        vector<int> trace;
+    };
+    std::stack<StackPath> searchingPath;
+    bool notInTrace(const vector<int>& trace,int node){
+        for (vector<int>::const_iterator p = trace.begin(); p != trace.end(); p++)
+            if (*p == node)
+                return false;
+        return true;
+    }
+public:
+    DFSSolver(size_t num,int start,int end):Solver(num,start,end){
+        minWeight = 1e9;
+        searchingPath.push({0.0f,{startID}});
+    }
+    void checkToSolve(int steptic,const vector<Station>& stations) override;
 };
 class Recorder{
 public:
@@ -261,8 +287,8 @@ public:
     int tickStep;
     int startID,endID;
     double startRoutingTIme;
-    std::unique_ptr<Route> basicPath,primPath,kruskalPath;
-    std::unique_ptr<PrimSolver> primSolver;
+    std::unique_ptr<Route> dfsPath,primPath;
+    std::unique_ptr<Solver> primSolver,dfsSolver;
     static constexpr glm::vec3 defaultTrunkColor = glm::vec3(1.0,1.0,1.0);
     static constexpr glm::vec3 basicTrunkColor = glm::vec3(1.0,0.0,0.0);//red
     static constexpr glm::vec3 primTrunkColor = glm::vec3(0.0,1.0,0.0);//green
@@ -279,6 +305,7 @@ private:
         toCheckSelect = false;
         mapTopo2Flat.clear();
         primSolver = nullptr;
+        dfsSolver = nullptr;
     }
 };
 void InitResource(GLFWwindow *& window);
@@ -292,9 +319,6 @@ void loadLineGeoJsonResource(vector<vector<Vertex>>& pointDataset,string resourc
 void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stations,string resourcename,const glm::vec3 color);
 void calcDirectLength(vector<Station>& stations,const Citys& citygroup);
 bool checkWholeTic();
-void solveBasicPath(const int startID,const int endID,const vector<Station>& stations);
-void solvePrimPath(const int startID,const int endID,const vector<Station>& stations);
-void solveKruskalPath(const int startID,const int endID,const vector<Station>& stations);
 void InitSolvers(int startID,int endID,const vector<Station>& stations);
 }
 #endif /* component_hpp */
