@@ -17,6 +17,7 @@
 #include "OpenGL/graphing.hpp"
 #include "OpenGL/window.hpp"
 #include "applications/component.hpp"
+#include "dictionary/dictionary.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -25,6 +26,7 @@
 int maze_main();
 int binarytree_main();
 int transport_main();
+int dictionary_main();
 int main(int argc, char **argv){
     if (argc == 1){
         ::testing::InitGoogleTest(&argc, argv);
@@ -49,6 +51,9 @@ int main(int argc, char **argv){
     }else if (program_type == "transport"){
         std::cout<<"transport"<<std::endl;
         transport_main();
+    }else if (program_type == "dictionary"){
+        std::cout<<"dictionary"<<std::endl;
+        dictionary_main();
     }
     return 0;
 }
@@ -221,4 +226,10 @@ int transport_main(){
     glfwDestroyWindow(window);
     glfwTerminate();
     return  0;
+}
+int dictionary_main(){
+    using namespace dict;
+    BSTDictionary bstdict;
+    bstdict.dm.readDictfile("/Users/channingtong/Program/data_structure/data_structure/dictionary/EnWords.csv");
+    return 0;
 }

@@ -28,7 +28,7 @@ template<class Object>
 struct TreeNode{
     Object element;
     TreeNode *firstChild;
-    TreeNode * nextSibling;
+    TreeNode *nextSibling;
     TreeNode(const Object& x, TreeNode* fchild = nullptr, TreeNode* sibling = nullptr):
     element(x),firstChild(fchild),nextSibling(sibling){}
 };
@@ -36,7 +36,7 @@ template<class Object>
 struct BinaryTreeNode{
     Object element;
     BinaryTreeNode *left;
-    BinaryTreeNode * right;
+    BinaryTreeNode *right;
     BinaryTreeNode(const Object& x, BinaryTreeNode* lt = nullptr, BinaryTreeNode* rt = nullptr):
     element(x),left(lt),right(rt){}
 };
@@ -73,7 +73,7 @@ struct QuadTreeNode{
 template <class Object,class NodeStructure>
 class Tree {
 protected:
-    size_t size;
+    //size_t size;
     NodeStructure* root;
 public:
     Tree(){}
