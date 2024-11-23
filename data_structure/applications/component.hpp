@@ -15,6 +15,9 @@
 #include <ogrsf_frmts.h>
 #include "../OpenGL/graphing.hpp"
 #include "../ADT/tree.hpp"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 namespace maze{
 using std::vector;
 class Recorder{
@@ -333,5 +336,35 @@ void loadPointGeoJsonResource(vector<Vertex>& pointDataset,vector<Station>& stat
 void calcDirectLength(vector<Station>& stations,const Citys& citygroup);
 bool checkWholeTic();
 void InitSolvers(int startID,int endID,const vector<Station>& stations);
+}
+namespace dict{
+class Recorder{
+public:
+    static Recorder& getRecord(){
+        static Recorder instance;
+        return instance;
+    }
+    Recorder(const Recorder&) = delete;
+    void operator=(const Recorder&) = delete;
+    ImFont *englishFont,*bandFont,*chineseFont;
+    int selectedItemIndex;
+    std::string recordWord,recordSearch;
+    std::vector<std::string> items;
+    std::vector<std::string> wordList;
+    void ChangeImGUIStyle(){
+        ImGuiIO& io = ImGui::GetIO();
+        englishFont = io.Fonts->AddFontFromFileTTF("/Users/channingtong/Program/data_structure/ImGUIopengl3/Arial.ttf", 24.0f, nullptr, io.Fonts->GetGlyphRangesDefault());
+        bandFont = io.Fonts->AddFontFromFileTTF("/Users/channingtong/Program/data_structure/ImGUIopengl3/FontAwesome6Free-Regular.otf", 24.0f);
+        chineseFont = io.Fonts->AddFontFromFileTTF("/Users/channingtong/Program/data_structure/ImGUIopengl3/Songti.ttc", 24.0f,nullptr,io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        io.Fonts->Build();
+    }
+private:
+    Recorder(){
+        selectedItemIndex = 0;
+        recordWord = "";
+        recordSearch = "";
+        items.clear();
+    }
+};
 }
 #endif /* component_hpp */

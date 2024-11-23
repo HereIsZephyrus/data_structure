@@ -172,6 +172,9 @@ int binarytree_main(){
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
@@ -230,6 +233,72 @@ int transport_main(){
 int dictionary_main(){
     using namespace dict;
     BSTDictionary bstdict;
-    bstdict.dm.readDictfile("/Users/channingtong/Program/data_structure/data_structure/dictionary/EnWords.csv");
+    std::vector<DictItem> rawItems;
+    readDictfile("/Users/channingtong/Program/data_structure/data_structure/dictionary/EnWords.csv", rawItems);
+    bstdict.dm.readDictList(rawItems);
+    GLFWwindow *& window = WindowParas::getInstance().window;
+    if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-字典") != 0)
+        return -1;
+    initImGUI(window);
+    Recorder& recorder = Recorder::getRecord();
+    recorder.ChangeImGUIStyle();
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        glClearColor(1.0,1.0,1.0,1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        Recorder& recorder = Recorder::getRecord();
+        WindowParas& windowPara = WindowParas::getInstance();
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImVec2(windowPara.SIDEBAR_WIDTH, windowPara.WINDOW_HEIGHT));
+        
+        ImGui::Begin("Do you mean:", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+        if (!recorder.items.empty()){
+            ImGui::PushFont(recorder.englishFont);
+            const int size = static_cast<int>(recorder.items.size());
+            const char** items = new const char*[size];
+            int i = 0;
+            for (std::vector<string>::const_iterator item = recorder.items.begin(); item != recorder.items.end(); item++,i++)
+                items[i] = item->c_str();
+            ImGui::ListBox("##", &recorder.selectedItemIndex, items, size,20);
+            recorder.recordWord = items[recorder.selectedItemIndex];
+            delete[] items;
+            ImGui::PopFont();
+        }
+        ImGui::End();
+        ImGui::SetNextWindowPos(ImVec2(windowPara.SIDEBAR_WIDTH, 0));
+        ImGui::SetNextWindowSize(ImVec2(windowPara.WINDOW_WIDTH - windowPara.SIDEBAR_WIDTH, windowPara.WINDOW_HEIGHT));
+        ImGui::Begin("Dicitionary", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+        char searchBuffer[128] = "";
+        strcpy(searchBuffer, recorder.recordSearch.c_str());
+        ImGui::PushFont(recorder.bandFont);
+        ImGui::Text("\uf002");
+        ImGui::PopFont();
+        ImGui::SameLine();
+        ImGui::PushFont(recorder.chineseFont);
+        ImGui::InputText("单词检索", searchBuffer, sizeof(searchBuffer));
+        if (recorder.items.empty())
+            ImGui::Text("%s", "no such word");
+        else
+            ImGui::Text("%s", bstdict.query(recorder.recordWord).c_str());
+        //std::cout<<searchBuffer<<std::endl;
+        if (string(searchBuffer) != recorder.recordSearch){
+            recorder.recordSearch = searchBuffer;
+            recorder.selectedItemIndex = 0;
+            bstdict.querysubtree(recorder.recordSearch,recorder.items);
+        }
+        ImGui::PopFont();
+        ImGui::End();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        glfwSwapBuffers(window);
+    }
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 0;
 }

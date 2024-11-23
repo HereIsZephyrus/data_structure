@@ -19,9 +19,6 @@
 #include "../OpenGL/graphing.hpp"
 #include "../OpenGL/window.hpp"
 #include "../ADT/tree.hpp"
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 namespace maze{
 void Map::generate(){
     srand((unsigned int)time(0));

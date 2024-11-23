@@ -9,6 +9,7 @@
 #define dictionary_h
 #include <cstring>
 #include <string>
+#include <vector>
 //#include <unicode/unistr.h>
 //#include <unicode/ustream.h>
 #include "../ADT/tree.hpp"
@@ -39,13 +40,22 @@ public:
     DictionaryManager() = default;
     DictionaryManager(baseTree *dict): dict(dict){}
     void readDictfile(string filePath);
+    void readDictList(const std::vector<DictItem>& items);
 };
-class BSTDictionary : public BinarySearchTree<DictItem>{
+class QueryDictionary{
+    using node = BinaryTreeNode<DictItem>;
+public:
+    std::string query(std::string searchWord,node *p);
+};
+class BSTDictionary : public BinarySearchTree<DictItem>, public QueryDictionary{
 public:
     DictionaryManager dm;
     BSTDictionary():dm(this){}
     ~BSTDictionary(){}
+    std::string query(std::string searchWord){return QueryDictionary::query(searchWord,root);}
+    void querysubtree(std::string searchWord,std::vector<std::string>& items);
 };
+void readDictfile(string filePath,std::vector<DictItem>& items);
 }
 
 #endif /* dictionary_h */

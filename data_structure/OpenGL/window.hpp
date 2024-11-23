@@ -30,7 +30,7 @@ public:
     GLFWwindow * window;
     const GLint WINDOW_WIDTH = 960;
     const GLint WINDOW_HEIGHT = 720;
-    const GLint SIDEBAR_WIDTH = 300;
+    const GLint SIDEBAR_WIDTH = 200;
     GLint SCREEN_WIDTH,SCREEN_HEIGHT;
     GLfloat xScale,yScale;
     GLfloat defaultAlpha;
