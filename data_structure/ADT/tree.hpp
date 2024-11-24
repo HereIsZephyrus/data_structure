@@ -332,6 +332,133 @@ protected:
         }
     }
 };
+enum RBColor { RED, BLACK };
+template<class Object>
+struct RBTreeNode{
+    RBColor color;
+    Object element;
+    RBTreeNode *left;
+    RBTreeNode *right;
+    RBTreeNode *parrent;
+    RBTreeNode(const Object& x, RBColor c = RED, RBTreeNode* lt = nullptr, RBTreeNode* rt = nullptr, RBTreeNode *p = nullptr):
+    element(x),color(c),left(lt),right(rt),parrent((p)){}
+};
+template <class Object>
+class RBSearchTree : public BinarySearchTree<Object,RBTreeNode<Object>>{
+    using RB = RBSearchTree;
+    using node = RBTreeNode<Object>;
+public:
+    RBSearchTree(){this->root = nullptr;}
+    ~RBSearchTree(){}
+    const RB & operator = (const RB & rhs){
+        if (this != &rhs){
+            this->clear();
+            this->root = this->clone(rhs.root);
+        }
+        return *this;
+    }
+    void insert(const Object& x){insert(x, this->root);}
+    void remove(const Object& x){remove(x, this->root);}
+private:
+    int getHeight(node* p) const {return (p != nullptr) ? p->height : 0;}
+    int getBalance(node* p) const {return (p != nullptr) ?  0 : getHeight(p->left) - getHeight(p->right);}
+    void fixInsert(node *p) {
+        while (p != this->root && p->parent->color == RED) {
+            if (p->parent == p->parent->parent->left) {
+                node* uncle = p->parent->parent->right;
+                if (uncle && uncle->color == RED) {
+                    // Case 1: Uncle is RED
+                    p->parent->color = BLACK;
+                    p->color = BLACK;
+                    p->parent->parent->color = RED;
+                    p = p->parent->parent;
+                } else {
+                    if (p == p->parent->right) {
+                        // Case 2: Node is right child
+                        p = p->parent;
+                        rotateLeft(p);
+                    }
+                    // Case 3: Node is left child
+                    p->parent->color = BLACK;
+                    p->parent->parent->color = RED;
+                    rotateRight(p->parent->parent);
+                }
+            } else {
+                // Mirror case for the right child
+                // ...
+            }
+        }
+        this->root->color = BLACK;
+    }
+protected:
+    node* clone(node* rhst) const{
+        if (rhst == nullptr)
+            return nullptr;
+        return new node(rhst->element,rhst->color,clone(rhst->left),clone(rhst->right),rhst->parrent);
+    }
+    void insert(const Object& x, node* & p){
+        if ( p == nullptr)
+            p  = new node(x, 1, nullptr, nullptr);
+        if (p->element == x)
+            return;
+        else if (x < p->element)
+            insert(x, p->left);
+        else
+            insert(x, p->right);
+        p->height = 1 + std::max(getHeight(p->left),getHeight(p->right));
+        int balance = getBalance(p);
+        if (balance > 1 && x < p->left->element)
+            p = rightRotate(p);
+        else if (balance < -1 && x > p->right->element)
+           p = leftRotate(p);
+        else if (balance > 1 && x > p->left->element) {
+            p->left = leftRotate(p->left);
+            p = rightRotate(p);
+       }
+        else if (balance < -1 && x < p->right->element) {
+            p->right = rightRotate(p->right);
+           p = leftRotate(p);
+       }
+    }
+    void remove(const Object& x, node* & p){
+        if (p == nullptr)
+            return;
+        if (x < p->element)
+            remove(x, p->left);
+        else if (x > p->element)
+            remove(x, p->right);
+        else{// find it
+            if (p->left != nullptr && p->right != nullptr){
+                p->element = this->findMin(p->right)->element;
+                remove(p->element, p->right);
+            }
+            else{
+                node* ret_p = p;
+                if (p->left == nullptr)
+                    p = p->right;
+                else
+                    p = p->left;
+                delete ret_p;
+            }
+        }
+        if (this->root == nullptr)
+            return;
+        this->root->height = 1 + std::max(getHeight(this->root->left), getHeight(this->root->right));
+        int balance = getBalance(this->root);
+        if (balance > 1 && getBalance(this->root->left) >= 0)
+            this->root = rightRotate(this->root);
+        else if (balance < -1 && getBalance(this->root->right) <= 0)
+            this->root = leftRotate(this->root);
+        else if (balance > 1 && getBalance(this->root->left) < 0) {
+            this->root->left = leftRotate(this->root->left);
+            this->root = rightRotate(this->root);
+        }
+        else if (balance < -1 && getBalance(this->root->right) > 0) {
+            this->root->right = rightRotate(this->root->right);
+            this->root = leftRotate(this->root);
+        }
+    }
+};
 
 template <class Object>
 class QuadTree : protected Tree<Object, QuadTreeNode<Object>>{
