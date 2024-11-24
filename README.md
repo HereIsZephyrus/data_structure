@@ -33,8 +33,14 @@ C++ / OpenGL项目.
     <img src="https://github.com/HereIsZephyrus/zephyrus.img/blob/main/images/blog/collision_animation_renew.gif" alt="collision" />
 </p>
 
-3. 数据结构实习3: 省会高铁最短路径
+4. 数据结构实习3: 省会高铁最短路径
 
 <p align="center">
     <img src="https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/data_structure_transport.gif" alt="collision" />
+</p>
+
+5. 数据结构实习4: 英汉字典
+
+<p align="center">
+    <img src="https://cdn.jsdelivr.net/gh/HereIsZephyrus/zephyrus.img/images/blog/data_strcture_dict.gif" alt="collision" />
 </p>
