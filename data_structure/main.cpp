@@ -232,10 +232,12 @@ int transport_main(){
 }
 int dictionary_main(){
     using namespace dict;
-    BSTDictionary bstdict;
+    //BSTDictionary bstdict;
+    AVLDictionary avldict;
     std::vector<DictItem> rawItems;
     readDictfile("/Users/channingtong/Program/data_structure/data_structure/dictionary/EnWords.csv", rawItems);
-    bstdict.dm.readDictList(rawItems);
+    //bstdict.dm.readDictList(rawItems);
+    avldict.dm.readDictList(rawItems);
     GLFWwindow *& window = WindowParas::getInstance().window;
     if (!HAS_INIT_OPENGL_CONTEXT && initOpenGL(window,"2025Autumn数据结构实习-字典") != 0)
         return -1;
@@ -282,12 +284,14 @@ int dictionary_main(){
         if (recorder.items.empty())
             ImGui::Text("%s", "no such word");
         else
-            ImGui::Text("%s", bstdict.query(recorder.recordWord).c_str());
+            //ImGui::Text("%s", bstdict.query(recorder.recordWord).c_str());
+            ImGui::Text("%s", avldict.query(recorder.recordWord).c_str());
         //std::cout<<searchBuffer<<std::endl;
         if (string(searchBuffer) != recorder.recordSearch){
             recorder.recordSearch = searchBuffer;
             recorder.selectedItemIndex = 0;
-            bstdict.querysubtree(recorder.recordSearch,recorder.items);
+            //bstdict.querysubtree(recorder.recordSearch,recorder.items);
+            avldict.querysubtree(recorder.recordSearch,recorder.items);
         }
         ImGui::PopFont();
         ImGui::End();

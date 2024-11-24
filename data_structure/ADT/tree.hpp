@@ -89,9 +89,9 @@ public:
     //virtual void remove(const Object& x, NodeStructure* & node) const;
 };
 
-template <class Object>
-class BinarySearchTree : protected Tree<Object, BinaryTreeNode<Object>>{
-    using node = BinaryTreeNode<Object>;
+template <class Object,class TreeNode = BinaryTreeNode<Object>>
+class BinarySearchTree : protected Tree<Object, TreeNode>{
+    using node = TreeNode;
     using BST = BinarySearchTree;
     static TraversalType outputFlag;
 public:
@@ -147,10 +147,12 @@ protected:
                 break;
         }
     }
-    node* clone(node* rhst) const{
-        if (rhst == nullptr)
-            return nullptr;
-        return new node(rhst->element,clone(rhst->left),clone(rhst->right));
+    void destroy(node* p){
+        if (p != nullptr){
+            destroy(p->left);
+            destroy(p->right);
+            delete p;
+        }
     }
     bool contains(const Object& x, node* p) const{
         if (p == nullptr)
@@ -173,8 +175,12 @@ protected:
             return p;
         return findMax(p->right);
     }
-private:
-    void insert(const Object& x, node* & p) const{
+    node* clone(node* rhst) {
+        if (rhst == nullptr)
+            return nullptr;
+        return new node(rhst->element,clone(rhst->left),clone(rhst->right));
+    }
+    void insert(const Object& x, node* & p){
         if ( p == nullptr)
             p  = new node(x, nullptr, nullptr);
         if (p->element == x)
@@ -184,7 +190,7 @@ private:
         else
             insert(x, p->right);
     }
-    void remove(const Object& x, node* & p) const{
+    void remove(const Object& x, node* & p){
         if (p == nullptr)
             return;
         if (x < p->element)
@@ -206,18 +212,126 @@ private:
             }
         }
     }
-    void destroy(node* p){
-        if (p != nullptr){
-            destroy(p->left);
-            destroy(p->right);
-            delete p;
+};
+template <class Object,class TreeNode>
+TraversalType BinarySearchTree<Object,TreeNode>::outputFlag = TraversalType::inorder;
+template <class Object>
+ostream& operator<<(ostream& os,const BinarySearchTree<Object>& tree){return BinarySearchTree<Object>::print(os,tree.root);}
+template <class Object>
+struct AVLTreeNode{
+    int height;
+    Object element;
+    AVLTreeNode *left;
+    AVLTreeNode *right;
+    AVLTreeNode(const Object& x, int h, AVLTreeNode* lt = nullptr, AVLTreeNode* rt = nullptr):
+    element(x),height(h),left(lt),right(rt){}
+};
+template <class Object>
+class AVLSearchTree : public BinarySearchTree<Object,AVLTreeNode<Object>>{
+    using AVL = AVLSearchTree;
+    using node = AVLTreeNode<Object>;
+public:
+    AVLSearchTree(){this->root = nullptr;}
+    ~AVLSearchTree(){}
+    const AVL & operator = (const AVL & rhs){
+        if (this != &rhs){
+            this->clear();
+            this->root = this->clone(rhs.root);
+        }
+        return *this;
+    }
+    void insert(const Object& x){insert(x, this->root);}
+    void remove(const Object& x){remove(x, this->root);}
+private:
+    int getHeight(node* p) const {return (p != nullptr) ? p->height : 0;}
+    int getBalance(node* p) const {return (p != nullptr) ?  0 : getHeight(p->left) - getHeight(p->right);}
+    node* rightRotate(node* y) {
+        node* x = y->left;
+        node* T2 = x->right;
+        x->right = y;
+        y->left = T2;
+        y->height = std::max(getHeight(y->left), getHeight(y->right)) + 1;
+        x->height = std::max(getHeight(x->left), getHeight(x->right)) + 1;
+        return x;
+    }
+    node* leftRotate(node* x) {
+        node* y = x->right;
+        node* T2 = y->left;
+        y->left = x;
+        x->right = T2;
+        x->height = std::max(getHeight(x->left), getHeight(x->right)) + 1;
+        y->height = std::max(getHeight(y->left), getHeight(y->right)) + 1;
+        return y;
+    }
+protected:
+    node* clone(node* rhst) const{
+        if (rhst == nullptr)
+            return nullptr;
+        return new node(rhst->element,rhst->height,clone(rhst->left),clone(rhst->right));
+    }
+    void insert(const Object& x, node* & p){
+        if ( p == nullptr)
+            p  = new node(x, 1, nullptr, nullptr);
+        if (p->element == x)
+            return;
+        else if (x < p->element)
+            insert(x, p->left);
+        else
+            insert(x, p->right);
+        p->height = 1 + std::max(getHeight(p->left),getHeight(p->right));
+        int balance = getBalance(p);
+        if (balance > 1 && x < p->left->element)
+            p = rightRotate(p);
+        else if (balance < -1 && x > p->right->element)
+           p = leftRotate(p);
+        else if (balance > 1 && x > p->left->element) {
+            p->left = leftRotate(p->left);
+            p = rightRotate(p);
+       }
+        else if (balance < -1 && x < p->right->element) {
+            p->right = rightRotate(p->right);
+           p = leftRotate(p);
+       }
+    }
+    void remove(const Object& x, node* & p){
+        if (p == nullptr)
+            return;
+        if (x < p->element)
+            remove(x, p->left);
+        else if (x > p->element)
+            remove(x, p->right);
+        else{// find it
+            if (p->left != nullptr && p->right != nullptr){
+                p->element = this->findMin(p->right)->element;
+                remove(p->element, p->right);
+            }
+            else{
+                node* ret_p = p;
+                if (p->left == nullptr)
+                    p = p->right;
+                else
+                    p = p->left;
+                delete ret_p;
+            }
+        }
+        if (this->root == nullptr)
+            return;
+        this->root->height = 1 + std::max(getHeight(this->root->left), getHeight(this->root->right));
+        int balance = getBalance(this->root);
+        if (balance > 1 && getBalance(this->root->left) >= 0)
+            this->root = rightRotate(this->root);
+        else if (balance < -1 && getBalance(this->root->right) <= 0)
+            this->root = leftRotate(this->root);
+        else if (balance > 1 && getBalance(this->root->left) < 0) {
+            this->root->left = leftRotate(this->root->left);
+            this->root = rightRotate(this->root);
+        }
+        else if (balance < -1 && getBalance(this->root->right) > 0) {
+            this->root->right = rightRotate(this->root->right);
+            this->root = leftRotate(this->root);
         }
     }
 };
-template <class Object>
-TraversalType BinarySearchTree<Object>::outputFlag = TraversalType::inorder;
-template <class Object>
-ostream& operator<<(ostream& os,const BinarySearchTree<Object>& tree){return BinarySearchTree<Object>::print(os,tree.root);}
 
 template <class Object>
 class QuadTree : protected Tree<Object, QuadTreeNode<Object>>{
