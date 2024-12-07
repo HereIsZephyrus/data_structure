@@ -62,6 +62,9 @@
 		321DF9AE2CF18613006B9A76 /* libicui18n.74.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicui18n.74.2.dylib; path = ../../../../opt/homebrew/Cellar/icu4c/74.2/lib/libicui18n.74.2.dylib; sourceTree = "<group>"; };
 		321DF9AF2CF18614006B9A76 /* libicuio.74.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicuio.74.2.dylib; path = ../../../../opt/homebrew/Cellar/icu4c/74.2/lib/libicuio.74.2.dylib; sourceTree = "<group>"; };
 		321DF9B02CF18614006B9A76 /* libicuuc.74.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicuuc.74.2.dylib; path = ../../../../opt/homebrew/Cellar/icu4c/74.2/lib/libicuuc.74.2.dylib; sourceTree = "<group>"; };
+		321DF9B92CF2026E006B9A76 /* Arial.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Arial.ttf; sourceTree = "<group>"; };
+		321DF9BA2CF20287006B9A76 /* Songti.ttc */ = {isa = PBXFileReference; lastKnownFileType = file; path = Songti.ttc; sourceTree = "<group>"; };
+		321DF9BB2CF207EF006B9A76 /* FontAwesome6Free-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "FontAwesome6Free-Regular.otf"; sourceTree = "<group>"; };
 		323B68D72CC699DB0041BBC3 /* libbenchmark.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbenchmark.a; path = ../../../../usr/local/lib/libbenchmark.a; sourceTree = "<group>"; };
 		323B68D82CC699DB0041BBC3 /* libbenchmark_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbenchmark_main.a; path = ../../../../usr/local/lib/libbenchmark_main.a; sourceTree = "<group>"; };
 		323B68DC2CC69A4C0041BBC3 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -167,6 +170,9 @@
 		32E2338C2CCA4184005513A9 /* ImGUIopengl3 */ = {
 			isa = PBXGroup;
 			children = (
+				321DF9BB2CF207EF006B9A76 /* FontAwesome6Free-Regular.otf */,
+				321DF9BA2CF20287006B9A76 /* Songti.ttc */,
+				321DF9B92CF2026E006B9A76 /* Arial.ttf */,
 				32E2337C2CCA4184005513A9 /* imconfig.h */,
 				32E2337D2CCA4184005513A9 /* imgui.h */,
 				32E2337E2CCA4184005513A9 /* imgui.cpp */,
