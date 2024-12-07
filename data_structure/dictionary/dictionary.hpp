@@ -13,6 +13,7 @@
 //#include <unicode/unistr.h>
 //#include <unicode/ustream.h>
 #include "../ADT/tree.hpp"
+#include "../applications/component.hpp"
 using std::string;
 namespace dict{
 using namespace tcb;

@@ -48,7 +48,7 @@ std::string  generateWord(std::mt19937 rng,const std::vector<DictItem>& dictiona
     return dictionary.at(index).word;
 }
 
-static void BM_BSTdict(benchmark::State& state) {
+static void dictBM_BST(benchmark::State& state) {
     BSTTestdict bstdict;
     std::vector<DictItem> rawItems;
     readDictfileSpecificSeed("/Users/channingtong/Program/data_structure/data_structure/dictionary/EnWords.csv", rawItems,rng);
@@ -62,7 +62,7 @@ static void BM_BSTdict(benchmark::State& state) {
     }
     state.SetComplexityN(count);
 }
-static void BM_AVLdict(benchmark::State& state) {
+static void dictBM_AVL(benchmark::State& state) {
     AVLTestdict avldict;
     std::vector<DictItem> rawItems;
     readDictfileSpecificSeed("/Users/channingtong/Program/data_structure/data_structure/dictionary/EnWords.csv", rawItems,rng);
@@ -77,7 +77,7 @@ static void BM_AVLdict(benchmark::State& state) {
     state.SetComplexityN(count);
 }
 
-//BENCHMARK(BM_BSTdict)->Name("二叉搜索树实现的字典")->Arg(100)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(20000)->Complexity(benchmark::oN);
-//BENCHMARK(BM_AVLdict)->Name("二叉平衡树实现的字典")->Arg(100)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(20000)->Complexity(benchmark::oN);
+BENCHMARK(dictBM_BST)->Name("二叉搜索树实现的字典")->Arg(100)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(20000)->Complexity(benchmark::oN);
+BENCHMARK(dictBM_AVL)->Name("二叉平衡树实现的字典")->Arg(100)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(20000)->Complexity(benchmark::oN);
 
 //BENCHMARK_MAIN();

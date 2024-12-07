@@ -15,8 +15,8 @@
 #include <GLFW/glfw3.h>
 #include "../dictionary/dictionary.hpp"
 using namespace dict;
-static void BM_BSTdict(benchmark::State& state);
-static void BM_AVLdict(benchmark::State& state);
+static void dictBM_BST(benchmark::State& state);
+static void dictBM_AVL(benchmark::State& state);
 std::string  generateWord(std::mt19937 rng,const std::vector<DictItem>& dictionary);
 class BSTTestdict : public BSTDictionary{
 public:

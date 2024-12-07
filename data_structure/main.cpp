@@ -54,8 +54,8 @@ int main(int argc, char **argv){
     }else if (program_type == "dictionary"){
         std::cout<<"dictionary"<<std::endl;
         dictionary_main();
-        //::benchmark::Initialize(&argc, argv);
-        //::benchmark::RunSpecifiedBenchmarks();
+        ::benchmark::Initialize(&argc, argv);
+        ::benchmark::RunSpecifiedBenchmarks();
     }
     return 0;
 }
