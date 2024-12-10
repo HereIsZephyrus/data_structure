@@ -77,7 +77,7 @@ static void dictBM_AVL(benchmark::State& state) {
     state.SetComplexityN(count);
 }
 
-BENCHMARK(dictBM_BST)->Name("二叉搜索树实现的字典")->Arg(100)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(20000)->Complexity(benchmark::oN);
-BENCHMARK(dictBM_AVL)->Name("二叉平衡树实现的字典")->Arg(100)->Arg(1000)->Arg(5000)->Arg(10000)->Arg(20000)->Complexity(benchmark::oN);
+BENCHMARK(dictBM_BST)->Name("二叉搜索树实现的字典")->Arg(10000)->Arg(100000)->Arg(50000)->Arg(100000)->Arg(200000)->Complexity(benchmark::oN);
+BENCHMARK(dictBM_AVL)->Name("二叉平衡树实现的字典")->Arg(10000)->Arg(100000)->Arg(50000)->Arg(100000)->Arg(200000)->Complexity(benchmark::oN);
 
 //BENCHMARK_MAIN();
